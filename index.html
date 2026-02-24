@@ -505,19 +505,38 @@
             try {
                 const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
                 rawData = [];
+                const awbDeduplicator = new Set();
                 let loadedCount = 0;
+                
+                const arrayDocs = [];
+                const individualDocs = [];
                 
                 querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    // Kompatibilitas mundur: jika data lama bentuknya array 'records'
+                    // Pisahkan data bundle lama dan data AWB individual baru
                     if (data.records && Array.isArray(data.records)) {
-                        rawData = rawData.concat(data.records);
-                        loadedCount += data.records.length;
+                        arrayDocs.push(data.records);
                     } else if (data.awb) {
-                        // Skema baru: 1 AWB = 1 Dokumen
-                        rawData.push(data);
-                        loadedCount++;
+                        individualDocs.push(data);
                     }
+                });
+
+                // 1. Muat data AWB individual terlebih dahulu (karena ini adalah data yang paling baru/sudah diupdate)
+                individualDocs.forEach(data => {
+                    rawData.push(data);
+                    awbDeduplicator.add(data.awb);
+                    loadedCount++;
+                });
+
+                // 2. Muat data array lama HANYA JIKA AWB tersebut belum ada di data yang sudah diupdate
+                arrayDocs.forEach(records => {
+                    records.forEach(rec => {
+                        if (rec.awb && !awbDeduplicator.has(rec.awb)) {
+                            rawData.push(rec);
+                            awbDeduplicator.add(rec.awb);
+                            loadedCount++;
+                        }
+                    });
                 });
                 
                 if (loadedCount > 0) {
@@ -631,8 +650,8 @@
                     
                     if (lines.length < 2) throw new Error("File CSV kosong atau format tidak valid");
 
-                    // Ambil Header (Asumsi pemisah adalah pipe |)
-                    const headers = lines[0].split('|').map(h => h.trim());
+                    // Ambil Header (Asumsi pemisah adalah pipe |). Tambahan: Hilangkan BOM (karakter tak kasat mata).
+                    const headers = lines[0].split('|').map(h => h.trim().replace(/^[\u200B\u200C\uFEFF]+/, ''));
                     
                     // Parsing Baris Data
                     const parsedRecords = lines.slice(1).map(line => {
@@ -731,19 +750,23 @@
                     
                     if (lines.length < 2) throw new Error("File CSV kosong atau format tidak valid");
 
-                    const headers = lines[0].split('|').map(h => h.trim());
+                    // PERBAIKAN: Hilangkan BOM (Byte Order Mark) dan ubah ke huruf kecil
+                    const headers = lines[0].split('|').map(h => h.trim().replace(/^[\u200B\u200C\uFEFF]+/, '').toLowerCase());
                     
-                    // Buat Map untuk pencarian cepat berdasarkan awb_no
+                    // Buat Map untuk pencarian cepat berdasarkan awb
                     const updateMap = new Map();
                     lines.slice(1).forEach(line => {
                         const values = line.split('|');
                         const obj = {};
                         headers.forEach((header, index) => {
-                            obj[header] = values[index] ? values[index].trim() : '';
+                            // Hapus tanda kutip dan spasi ekstra dari isi file
+                            obj[header] = values[index] ? values[index].trim().replace(/['"]/g, '') : '';
                         });
-                        // Indexing menggunakan awb_no dari file update
-                        if (obj.awb_no) {
-                            updateMap.set(obj.awb_no, obj);
+                        
+                        // Deteksi awb_no atau awb
+                        const awbVal = obj.awb_no || obj.awb;
+                        if (awbVal) {
+                            updateMap.set(awbVal, obj);
                         }
                     });
 
@@ -754,22 +777,38 @@
                         let updatedCount = 0;
                         const recordsToUpdate = [];
 
-                        // Gunakan rawData yang sudah diload di memori untuk pencocokan cepat
+                        // Gunakan rawData yang sudah diload di memori untuk pencocokan
                         rawData.forEach(rec => {
+                            // Pastikan pembersihan AWB untuk pencocokan akurat 100%
+                            const dbAwb = (rec.awb || '').trim().replace(/['"]/g, '');
+                            
                             // Cek: Jika data ini pending (80_tm kosong) DAN awb-nya ada di file update
-                            if ((!rec['80_tm'] || rec['80_tm'].trim() === '') && rec.awb && updateMap.has(rec.awb)) {
-                                const updateData = updateMap.get(rec.awb);
+                            if ((!rec['80_tm'] || rec['80_tm'].trim() === '') && dbAwb && updateMap.has(dbAwb)) {
+                                const updateData = updateMap.get(dbAwb);
                                 
-                                // Update kolom yang sudah ada dengan yang baru (sesuai instruksi)
-                                if (updateData['80_last'] !== undefined) rec['80_tm'] = updateData['80_last'];
-                                if (updateData['205_last'] !== undefined) rec['_205_tm_last'] = updateData['205_last'];
-                                if (updateData['delivery_sla'] !== undefined) rec['delivery_sla'] = updateData['delivery_sla'];
-                                if (updateData['55_tm'] !== undefined) rec['_55_tm'] = updateData['55_tm'];
+                                // Helper pembacaan nama kolom secara fleksibel
+                                const getVal = (keys) => {
+                                    const key = Object.keys(updateData).find(k => keys.includes(k));
+                                    return key ? updateData[key] : undefined;
+                                };
+
+                                // Eksekusi update nilai
+                                const val80 = getVal(['80_last', '80_tm']);
+                                if (val80 !== undefined && val80 !== '') rec['80_tm'] = val80;
                                 
-                                // Tambahkan kolom baru ke record database
-                                rec['hub_operator_internal'] = updateData['hub_operator_internal'] || '';
-                                rec['staging_operator_internal'] = updateData['staging_operator_internal'] || '';
-                                rec['fop_code_internal'] = updateData['fop_code_internal'] || '';
+                                const val205 = getVal(['205_last', '_205_tm_last']);
+                                if (val205 !== undefined && val205 !== '') rec['_205_tm_last'] = val205;
+                                
+                                const valSla = getVal(['delivery_sla']);
+                                if (valSla !== undefined && valSla !== '') rec['delivery_sla'] = valSla;
+                                
+                                const val55 = getVal(['55_tm', '_55_tm']);
+                                if (val55 !== undefined && val55 !== '') rec['_55_tm'] = val55;
+                                
+                                // Tambahkan kolom baru
+                                if (updateData['hub_operator_internal']) rec['hub_operator_internal'] = updateData['hub_operator_internal'];
+                                if (updateData['staging_operator_internal']) rec['staging_operator_internal'] = updateData['staging_operator_internal'];
+                                if (updateData['fop_code_internal']) rec['fop_code_internal'] = updateData['fop_code_internal'];
                                 
                                 recordsToUpdate.push(rec);
                                 updatedCount++;
@@ -1368,12 +1407,6 @@
                 // Pending berarti 80_tm kosong DAN _55_tm kosong
                 if ((!row['80_tm'] || row['80_tm'].trim() === '') && (!row['_55_tm'] || row['_55_tm'].trim() === '')) {
                     
-                    let fopCode = (row.fop_code_internal && row.fop_code_internal.trim() !== '') ? row.fop_code_internal.trim() : 'Belum Diupdate';
-                    // Keluarkan paket dengan fop_code_internal 80 dari pendingan
-                    if (fopCode === '80') {
-                        return;
-                    }
-
                     const staging = row.destination_staging || 'Unknown';
                     const awb = row.awb;
                     
@@ -1487,11 +1520,6 @@
                     // Ambil fop code, jika kosong/belum diupdate beri label khusus
                     let fopCode = (row.fop_code_internal && row.fop_code_internal.trim() !== '') ? row.fop_code_internal.trim() : 'Belum Diupdate';
                     
-                    // Keluarkan paket dengan fop_code_internal 80 dari pendingan
-                    if (fopCode === '80') {
-                        return;
-                    }
-
                     fopSet.add(fopCode);
 
                     if (!stagingGroups[staging]) {
