@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Operasional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar untuk chart */
+        .chart-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chart-container::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        .chart-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .chart-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-gray-800 min-h-screen">
+
+    <!-- HEADER & UPLOAD SECTION -->
+    <div class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 leading-tight">Dashboard Operasional</h1>
+                    <p class="text-xs text-gray-500" id="statusText">Sistem Manajemen Data Siap Digunakan</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="btnTriggerUpload" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+                    <span>Upload CSV Data</span>
+                </button>
+                <input type="file" accept=".csv" class="hidden" id="fileUpload" />
+                
+                <button id="btnUpdatePending" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" title="Update data khusus AWB yang masih pending">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v6h6"/></svg>
+                    <span>Update Pendingan</span>
+                </button>
+                <input type="file" accept=".csv" class="hidden" id="fileUpdatePending" />
+
+                <button id="btnHapusData" class="px-3 py-2 text-sm text-red-600 hover:bg-red-50 border border-red-200 rounded-lg transition-colors" title="Hapus Semua Data Database">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- ERROR MESSAGE -->
+        <div id="errorMessage" class="hidden mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded shadow-sm">
+            <div class="flex items-center gap-2 text-red-700">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                <p class="font-medium text-sm" id="errorText">Terjadi kesalahan.</p>
+            </div>
+        </div>
+
+        <!-- EMPTY STATE (Before Upload) -->
+        <div id="emptyState" class="flex flex-col items-center justify-center h-[60vh] text-center border-2 border-dashed border-gray-300 rounded-xl bg-white p-8">
+            <div class="bg-blue-50 p-4 rounded-full mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" class="text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Belum Ada Data di Database</h2>
+            <p class="text-sm text-gray-500 max-w-md">Klik <strong>Upload CSV Data</strong> di pojok kanan atas untuk memulai proses import data. Data akan tersimpan di database sistem secara permanen.</p>
+        </div>
+
+        <!-- DASHBOARD CONTENT (Hidden initially) -->
+        <div id="dashboardContent" class="hidden">
+            
+            <!-- FILTERS SECTION (Dipindah ke atas) -->
+            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mb-6">
+                <div class="flex items-center gap-2 mb-4 border-b border-gray-100 pb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Filter Data</h2>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Date Range -->
+                    <div class="col-span-1 md:col-span-2 flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Dari Tanggal (Input)</label>
+                            <input type="date" id="filterStartDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none filter-input" />
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Sampai Tanggal (Input)</label>
+                            <input type="date" id="filterEndDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none filter-input" />
+                        </div>
+                    </div>
+
+                    <!-- Dropdowns -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Destination Staging</label>
+                        <select id="filterDestination" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white filter-input">
+                            <option value="All">Semua Staging</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Service Code</label>
+                        <select id="filterService" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white filter-input">
+                            <option value="All">Semua Service</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Use COD</label>
+                        <select id="filterCod" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white filter-input">
+                            <option value="All">Semua Status</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Channel</label>
+                        <select id="filterChannel" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white filter-input">
+                            <option value="All">Semua Channel</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Delivery SLA</label>
+                        <select id="filterSla" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white filter-input">
+                            <option value="All">Semua SLA</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATS OVERVIEW -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                    <span class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Total AWB (Raw)</span>
+                    <span class="text-2xl font-bold text-gray-800" id="statTotalRaw">0</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex flex-col bg-blue-50/30">
+                    <span class="text-blue-600 text-xs font-semibold uppercase tracking-wider mb-1">AWB Terfilter</span>
+                    <span class="text-2xl font-bold text-blue-700" id="statTotalFiltered">0</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                    <span class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">SLA OK (Terfilter)</span>
+                    <span class="text-2xl font-bold text-emerald-600" id="statSlaOk">0</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                    <span class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">SLA Missed (Terfilter)</span>
+                    <span class="text-2xl font-bold text-red-600" id="statSlaMissed">0</span>
+                </div>
+            </div>
+
+            <!-- TREND PENGIRIMAN 80_TM CHART -->
+            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mb-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="p-2 rounded-lg bg-indigo-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                    </div>
+                    <h3 class="text-sm font-semibold text-gray-800">Trend Penyelesaian Kiriman (Berdasarkan Tanggal 80_tm)</h3>
+                </div>
+                <!-- Chart Vertical tanpa Y-Axis -->
+                <div id="chartTrend80" class="w-full flex items-end justify-start gap-3 overflow-x-auto pt-8 pb-2 border-b border-gray-100 chart-container" style="height: 250px;">
+                    <!-- Vertical bars injected here -->
+                </div>
+            </div>
+
+            <!-- CHARTS GRID -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Destination Staging Chart -->
+                <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="p-2 rounded-lg bg-gray-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-800">Top 15 Destination Staging</h3>
+                    </div>
+                    <div id="chartDestination" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 250px;"></div>
+                </div>
+
+                <!-- Service Code Chart -->
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="p-2 rounded-lg bg-gray-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-800">AWB by Service Code</h3>
+                    </div>
+                    <div id="chartService" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 250px;"></div>
+                </div>
+
+                <!-- Delivery SLA Chart -->
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="p-2 rounded-lg bg-gray-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-800">Delivery SLA Performance</h3>
+                    </div>
+                    <div id="chartSla" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 250px;"></div>
+                </div>
+
+                <!-- Channel Chart -->
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="p-2 rounded-lg bg-gray-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-800">AWB by Channel</h3>
+                    </div>
+                    <div id="chartChannel" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 250px;"></div>
+                </div>
+
+                <!-- Use COD Chart -->
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="p-2 rounded-lg bg-gray-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-800">Use COD</h3>
+                    </div>
+                    <div id="chartCod" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 250px;"></div>
+                </div>
+
+            </div>
+
+            <!-- TABEL PERFORMA STATUS -->
+            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mt-6 overflow-x-auto">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="p-2 rounded-lg bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+                    </div>
+                    <h3 class="text-sm font-semibold text-gray-800">Tabel Pencapaian Status (47, 204, 205, 80)</h3>
+                </div>
+                <table class="w-full text-left border-collapse min-w-max">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
+                            <th class="p-3 font-semibold">Destination Staging</th>
+                            <th class="p-3 font-semibold text-right border-l border-gray-200">Total AWB</th>
+                            <th class="p-3 font-semibold text-right border-l border-gray-200">Status 47</th>
+                            <th class="p-3 font-semibold text-right border-l border-gray-200">Status 204</th>
+                            <th class="p-3 font-semibold text-right border-l border-gray-200">Status 205</th>
+                            <th class="p-3 font-semibold text-right border-l border-gray-200">Status 80</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableStatusBody" class="text-sm divide-y divide-gray-100">
+                        <!-- Content goes here -->
+                    </tbody>
+                    <tfoot id="tableStatusFoot" class="bg-gray-50 font-bold text-gray-800 text-sm border-t-2 border-gray-200">
+                        <!-- Overall goes here -->
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- TABEL LEAD TIME (LT) 47 - 80 -->
+            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mt-6 overflow-x-auto">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="p-2 rounded-lg bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <h3 class="text-sm font-semibold text-gray-800">Tabel Lead Time (LT) 47 - 80</h3>
+                </div>
+                <table class="w-full text-left border-collapse min-w-max">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
+                            <th class="p-3 font-semibold">Destination Staging</th>
+                            <th class="p-3 font-semibold text-right border-l border-gray-200 w-1/4">Total AWB (Selesai)</th>
+                            <th class="p-3 font-semibold text-right border-l border-gray-200">Lead Time (Jam)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableLtBody" class="text-sm divide-y divide-gray-100">
+                        <!-- Content goes here -->
+                    </tbody>
+                    <tfoot id="tableLtFoot" class="bg-gray-50 font-bold text-gray-800 text-sm border-t-2 border-gray-200">
+                        <!-- Overall goes here -->
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- TABEL EXPECT DELIVERY -->
+            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mt-6 overflow-x-auto">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="p-2 rounded-lg bg-gray-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                    </div>
+                    <h3 class="text-sm font-semibold text-gray-800">Tabel Expect Delivery (Status EDD vs Tanggal Input)</h3>
+                </div>
+                <table class="w-full text-left border-collapse min-w-max">
+                    <thead id="tableExpHead">
+                        <!-- Head goes here -->
+                    </thead>
+                    <tbody id="tableExpBody" class="text-sm divide-y divide-gray-100">
+                        <!-- Content goes here -->
+                    </tbody>
+                    <tfoot id="tableExpFoot" class="bg-gray-50 font-bold text-gray-800 text-sm border-t-2 border-gray-200">
+                        <!-- Overall goes here -->
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- TABEL DATA PENDINGAN -->
+            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mt-6 overflow-x-auto">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="p-2 rounded-lg bg-red-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <h3 class="text-sm font-semibold text-gray-800">Tabel Data Pendingan (Sebaran Lokasi FOP)</h3>
+                </div>
+                <table class="w-full text-left border-collapse min-w-max">
+                    <thead id="tablePendingHead">
+                        <!-- Head goes here -->
+                    </thead>
+                    <tbody id="tablePendingBody" class="text-sm divide-y divide-gray-100">
+                        <!-- Content goes here -->
+                    </tbody>
+                    <tfoot id="tablePendingFoot" class="bg-red-50 font-bold text-red-700 text-sm border-t-2 border-gray-200">
+                        <!-- Overall goes here -->
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- TABEL PAKET RETURN -->
+            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mt-6 overflow-x-auto">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="p-2 rounded-lg bg-orange-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v6h6"/></svg>
+                    </div>
+                    <h3 class="text-sm font-semibold text-gray-800">Tabel Paket Return (Sebaran Lokasi FOP)</h3>
+                </div>
+                <table class="w-full text-left border-collapse min-w-max">
+                    <thead id="tableReturnHead">
+                        <!-- Head goes here -->
+                    </thead>
+                    <tbody id="tableReturnBody" class="text-sm divide-y divide-gray-100">
+                        <!-- Content goes here -->
+                    </tbody>
+                    <tfoot id="tableReturnFoot" class="bg-orange-50 font-bold text-orange-700 text-sm border-t-2 border-gray-200">
+                        <!-- Overall goes here -->
+                    </tfoot>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- KUMPULAN MODAL (SYSTEM MODALS) -->
+
+    <!-- Modal Password -->
+    <div id="modalPassword" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-200">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Otorisasi Diperlukan</h3>
+            <p class="text-sm text-gray-500 mb-4">Masukkan kata sandi untuk mengunggah data.</p>
+            <input type="password" id="inputPassword" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none mb-4" placeholder="Password" />
+            <div id="passwordError" class="text-red-500 text-xs mb-4 hidden">Password salah!</div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('modalPassword')" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Batal</button>
+                <button id="btnSubmitPassword" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Lanjut</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pilih Tanggal -->
+    <div id="modalDate" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-200">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Pilih Tanggal Paket</h3>
+            <p class="text-sm text-gray-500 mb-4">Tanggal ini akan disematkan pada seluruh data yang Anda unggah barusan.</p>
+            <input type="date" id="inputModalDate" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none mb-4" />
+            <div class="flex justify-end gap-3">
+                <button onclick="cancelDateSelection()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Batal</button>
+                <button id="btnSubmitDate" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Simpan ke Database</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi Hapus -->
+    <div id="modalConfirmDelete" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-200">
+            <div class="flex items-center gap-3 mb-4 text-red-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                <h3 class="text-lg font-bold text-gray-900">Hapus Semua Data?</h3>
+            </div>
+            <p class="text-sm text-gray-500 mb-6">Tindakan ini akan menghapus <strong>seluruh data</strong> dari database secara permanen dan tidak dapat dikembalikan. Lanjutkan?</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('modalConfirmDelete')" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Batal</button>
+                <button id="btnConfirmDelete" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg">Ya, Hapus Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Alert Umum (Error / Success) -->
+    <div id="modalAlert" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-200 text-center">
+            <div id="alertIcon" class="mx-auto mb-4 w-12 h-12 flex items-center justify-center rounded-full"></div>
+            <h3 id="alertTitle" class="text-lg font-bold text-gray-900 mb-2">Informasi</h3>
+            <p id="alertMessage" class="text-sm text-gray-500 mb-6">Pesan detail alert.</p>
+            <button onclick="closeModal('modalAlert')" class="w-full px-4 py-2 text-sm bg-gray-900 hover:bg-black text-white rounded-lg">Tutup</button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, getDoc, doc, setDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Konfigurasi Firebase Anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUTNGC84j09qu_VNzbcVi_aM3fVzfOZCs",
+            authDomain: "datastaging-f3300.firebaseapp.com",
+            projectId: "datastaging-f3300",
+            storageBucket: "datastaging-f3300.firebasestorage.app",
+            messagingSenderId: "1080172998944",
+            appId: "1:1080172998944:web:bc26fe5a0f23882849a745",
+            measurementId: "G-THLCVST8R3"
+        };
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        const COLLECTION_NAME = "dashboard_daily_data";
+
+        let rawData = [];
+        let filteredData = [];
+        let pendingFile = null; 
+        let currentAuthAction = null; 
+
+        // UI Elements
+        const btnTriggerUpload = document.getElementById('btnTriggerUpload');
+        const btnUpdatePending = document.getElementById('btnUpdatePending');
+        const fileUpload = document.getElementById('fileUpload');
+        const fileUpdatePending = document.getElementById('fileUpdatePending');
+        const btnHapusData = document.getElementById('btnHapusData');
+        const emptyState = document.getElementById('emptyState');
+        const dashboardContent = document.getElementById('dashboardContent');
+        const statusText = document.getElementById('statusText');
+
+        // Filter Inputs
+        const filterInputs = document.querySelectorAll('.filter-input');
+        const inputs = {
+            startDate: document.getElementById('filterStartDate'),
+            endDate: document.getElementById('filterEndDate'),
+            destination_staging: document.getElementById('filterDestination'),
+            service_code: document.getElementById('filterService'),
+            use_cod: document.getElementById('filterCod'),
+            channel: document.getElementById('filterChannel'),
+            delivery_sla: document.getElementById('filterSla')
+        };
+
+        // --- SISTEM MANAJEMEN MODAL ---
+        window.openModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = modal.children[0];
+            modal.classList.remove('hidden');
+            // Trigger reflow
+            void modal.offsetWidth; 
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+        };
+
+        window.closeModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = modal.children[0];
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200); // durasi animasi
+        };
+
+        window.showAlert = function(type, title, message) {
+            const titleEl = document.getElementById('alertTitle');
+            const msgEl = document.getElementById('alertMessage');
+            const iconEl = document.getElementById('alertIcon');
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+
+            if (type === 'success') {
+                iconEl.className = "mx-auto mb-4 w-12 h-12 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-600";
+                iconEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>`;
+            } else if (type === 'error') {
+                iconEl.className = "mx-auto mb-4 w-12 h-12 flex items-center justify-center rounded-full bg-red-100 text-red-600";
+                iconEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`;
+            }
+
+            window.openModal('modalAlert');
+        };
+
+        // --- FIREBASE: LOAD DATA ---
+        async function loadDataFromDB() {
+            if (!auth.currentUser) return; // Mencegah load jika belum terautentikasi
+
+            try {
+                const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
+                rawData = [];
+                let loadedCount = 0;
+                
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    // Kompatibilitas mundur: jika data lama bentuknya array 'records'
+                    if (data.records && Array.isArray(data.records)) {
+                        rawData = rawData.concat(data.records);
+                        loadedCount += data.records.length;
+                    } else if (data.awb) {
+                        // Skema baru: 1 AWB = 1 Dokumen
+                        rawData.push(data);
+                        loadedCount++;
+                    }
+                });
+                
+                if (loadedCount > 0) {
+                    statusText.textContent = `Memuat total ${loadedCount.toLocaleString()} data AWB dari Firebase Cloud.`;
+                    initDashboard();
+                } else {
+                    emptyState.classList.remove('hidden');
+                    dashboardContent.classList.add('hidden');
+                    statusText.textContent = "Sistem Manajemen Data Siap Digunakan";
+                }
+            } catch (error) {
+                console.error("Firebase Load Error:", error);
+                window.showAlert('error', 'Database Error', 'Gagal memuat data dari Firebase. Pastikan koneksi dan aturan keamanan Firestore Anda mengizinkan read.');
+            }
+        }
+
+        // Inisialisasi Aplikasi (Auth & Load Data)
+        async function initializeDashboardApp() {
+            try {
+                statusText.textContent = "Menghubungkan ke server (Otorisasi)...";
+                // Melakukan sign in anonim TERLEBIH DAHULU dan menunggunya (await)
+                await signInAnonymously(auth);
+                
+                // Track state login
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        loadDataFromDB();
+                    }
+                });
+            } catch (error) {
+                console.error("Auth Error:", error);
+                window.showAlert('error', 'Akses Ditolak', 'Gagal melakukan otorisasi login ke Firebase. Pastikan Anonymous Sign-In diaktifkan di Firebase Console.');
+                statusText.textContent = "Gagal mengautentikasi.";
+            }
+        }
+
+        // Jalankan Inisialisasi saat halaman siap
+        initializeDashboardApp();
+
+        // --- ALUR PROSES UPLOAD ---
+        
+        // 1. Tombol Upload Ditekan -> Buka Modal Password
+        btnTriggerUpload.addEventListener('click', () => {
+            currentAuthAction = 'UPLOAD';
+            document.getElementById('inputPassword').value = '';
+            document.getElementById('passwordError').classList.add('hidden');
+            window.openModal('modalPassword');
+        });
+
+        // 1b. Tombol Update Pendingan Ditekan
+        btnUpdatePending.addEventListener('click', () => {
+            currentAuthAction = 'UPDATE_PENDING';
+            document.getElementById('inputPassword').value = '';
+            document.getElementById('passwordError').classList.add('hidden');
+            window.openModal('modalPassword');
+        });
+
+        // 2. Submit Password
+        document.getElementById('btnSubmitPassword').addEventListener('click', () => {
+            const pw = document.getElementById('inputPassword').value;
+            if (pw === 'Admin123') {
+                window.closeModal('modalPassword');
+                // Eksekusi aksi sesuai tombol yang ditekan awal
+                if (currentAuthAction === 'UPLOAD') {
+                    fileUpload.click();
+                } else if (currentAuthAction === 'UPDATE_PENDING') {
+                    fileUpdatePending.click();
+                }
+            } else {
+                document.getElementById('passwordError').classList.remove('hidden');
+            }
+        });
+
+        // 3. File Dipilih -> Buka Modal Tanggal
+        fileUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            pendingFile = file; // Simpan file ke memory
+            document.getElementById('inputModalDate').value = '';
+            window.openModal('modalDate');
+        });
+
+        window.cancelDateSelection = function() {
+            window.closeModal('modalDate');
+            fileUpload.value = ''; // reset
+            pendingFile = null;
+        };
+
+        // 4. Submit Tanggal -> Proses CSV & Simpan Database
+        document.getElementById('btnSubmitDate').addEventListener('click', () => {
+            const selectedDate = document.getElementById('inputModalDate').value;
+            if (!selectedDate) {
+                alert("Harap pilih tanggal terlebih dahulu!"); // Fallback kecil jika date kosong
+                return;
+            }
+
+            window.closeModal('modalDate');
+            statusText.textContent = "Memproses dan menyimpan data CSV ke Firebase...";
+            processAndSaveFile(pendingFile, selectedDate);
+        });
+
+        // Fungsi Memproses File
+        function processAndSaveFile(file, selectedDate) {
+            const reader = new FileReader();
+            
+            reader.onload = async function(event) {
+                try {
+                    const text = event.target.result;
+                    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+                    
+                    if (lines.length < 2) throw new Error("File CSV kosong atau format tidak valid");
+
+                    // Ambil Header (Asumsi pemisah adalah pipe |)
+                    const headers = lines[0].split('|').map(h => h.trim());
+                    
+                    // Parsing Baris Data
+                    const parsedRecords = lines.slice(1).map(line => {
+                        const values = line.split('|');
+                        const obj = {};
+                        headers.forEach((header, index) => {
+                            obj[header] = values[index] ? values[index].trim() : '';
+                        });
+                        // SEMATKAN TANGGAL INPUT KE DATA
+                        obj.input_date = selectedDate;
+                        return obj;
+                    });
+
+                    // --- LOGIKA PENGECEKAN DUPLIKAT AWB ---
+                    // Kumpulkan semua AWB yang sudah ada di database saat ini
+                    const existingAWBs = new Set(rawData.map(r => r.awb).filter(Boolean));
+                    
+                    const newValidRecords = [];
+                    let duplicateCount = 0;
+
+                    parsedRecords.forEach(record => {
+                        const awbValue = record.awb; 
+                        
+                        // Jika AWB sudah ada di Set (baik dari database atau dari file ini sendiri)
+                        if (awbValue && existingAWBs.has(awbValue)) {
+                            duplicateCount++; // Hitung sebagai duplikat dan lewati
+                        } else {
+                            newValidRecords.push(record);
+                            if (awbValue) existingAWBs.add(awbValue); // Masukkan ke set untuk mencegah duplikat di baris selanjutnya dalam file yang sama
+                        }
+                    });
+
+                    // --- SIMPAN KE FIREBASE FIRESTORE ---
+                    try {
+                        if (!auth.currentUser) throw new Error("Pengguna belum terautentikasi.");
+
+                        // Gunakan Batch Write untuk menyimpan per AWB agar tidak kena limit 1 MB
+                        // Batas maksimal batch Firestore adalah 500 operasi, kita pakai 450 untuk aman
+                        const batchSize = 450;
+                        for (let i = 0; i < newValidRecords.length; i += batchSize) {
+                            const chunk = newValidRecords.slice(i, i + batchSize);
+                            const batch = writeBatch(db);
+                            
+                            chunk.forEach(record => {
+                                // Jadikan nomor AWB sebagai nama/ID dokumen
+                                const docRef = doc(db, COLLECTION_NAME, record.awb);
+                                batch.set(docRef, record);
+                            });
+                            
+                            await batch.commit();
+                        }
+
+                        fileUpload.value = ''; 
+                        pendingFile = null;
+                        
+                        // Pesan kustom berdasarkan hasil pengecekan duplikat
+                        let msg = `Sebanyak ${newValidRecords.length.toLocaleString()} data baru untuk tanggal ${selectedDate} telah berhasil disimpan ke Cloud.`;
+                        if (duplicateCount > 0) {
+                            msg += ` Namun, ${duplicateCount.toLocaleString()} baris data dilewati karena AWB sudah ada di database.`;
+                        }
+                        
+                        window.showAlert('success', 'Proses Selesai!', msg);
+                        loadDataFromDB(); // Muat ulang visualisasi
+
+                    } catch (error) {
+                        console.error("Firebase Save Error:", error);
+                        window.showAlert('error', 'Gagal Simpan', 'Gagal menyimpan data ke Firebase. Pastikan aturan keamanan Firestore mengizinkan penulisan (write).');
+                    }
+
+                } catch (err) {
+                    window.showAlert('error', 'Format Salah', "Gagal membaca file: Pastikan format delimiter menggunakan '|' (pipe) dan kolom 'awb' tersedia.");
+                    statusText.textContent = "Gagal memproses file.";
+                }
+            };
+
+            reader.onerror = function() {
+                window.showAlert('error', 'Gagal Baca File', "Terjadi kesalahan sistem saat membaca file komputer Anda.");
+                statusText.textContent = "Gagal membaca file.";
+            };
+
+            reader.readAsText(file);
+        }
+
+        // --- ALUR UPDATE PENDINGAN ---
+        fileUpdatePending.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            statusText.textContent = "Mencocokkan dan mengupdate data pendingan di Cloud...";
+            
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                try {
+                    const text = event.target.result;
+                    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+                    
+                    if (lines.length < 2) throw new Error("File CSV kosong atau format tidak valid");
+
+                    const headers = lines[0].split('|').map(h => h.trim());
+                    
+                    // Buat Map untuk pencarian cepat berdasarkan awb_no
+                    const updateMap = new Map();
+                    lines.slice(1).forEach(line => {
+                        const values = line.split('|');
+                        const obj = {};
+                        headers.forEach((header, index) => {
+                            obj[header] = values[index] ? values[index].trim() : '';
+                        });
+                        // Indexing menggunakan awb_no dari file update
+                        if (obj.awb_no) {
+                            updateMap.set(obj.awb_no, obj);
+                        }
+                    });
+
+                    // --- UPDATE FIREBASE FIRESTORE ---
+                    try {
+                        if (!auth.currentUser) throw new Error("Pengguna belum terautentikasi.");
+
+                        let updatedCount = 0;
+                        const recordsToUpdate = [];
+
+                        // Gunakan rawData yang sudah diload di memori untuk pencocokan cepat
+                        rawData.forEach(rec => {
+                            // Cek: Jika data ini pending (80_tm kosong) DAN awb-nya ada di file update
+                            if ((!rec['80_tm'] || rec['80_tm'].trim() === '') && rec.awb && updateMap.has(rec.awb)) {
+                                const updateData = updateMap.get(rec.awb);
+                                
+                                // Update kolom yang sudah ada dengan yang baru (sesuai instruksi)
+                                if (updateData['80_last'] !== undefined) rec['80_tm'] = updateData['80_last'];
+                                if (updateData['205_last'] !== undefined) rec['_205_tm_last'] = updateData['205_last'];
+                                if (updateData['delivery_sla'] !== undefined) rec['delivery_sla'] = updateData['delivery_sla'];
+                                if (updateData['55_tm'] !== undefined) rec['_55_tm'] = updateData['55_tm'];
+                                
+                                // Tambahkan kolom baru ke record database
+                                rec['hub_operator_internal'] = updateData['hub_operator_internal'] || '';
+                                rec['staging_operator_internal'] = updateData['staging_operator_internal'] || '';
+                                rec['fop_code_internal'] = updateData['fop_code_internal'] || '';
+                                
+                                recordsToUpdate.push(rec);
+                                updatedCount++;
+                            }
+                        });
+
+                        // Proses update ke Firebase menggunakan Batch
+                        const batchSize = 450;
+                        for (let i = 0; i < recordsToUpdate.length; i += batchSize) {
+                            const chunk = recordsToUpdate.slice(i, i + batchSize);
+                            const batch = writeBatch(db);
+                            
+                            chunk.forEach(record => {
+                                // Nama dokumen adalah awb-nya
+                                const docRef = doc(db, COLLECTION_NAME, record.awb);
+                                // Set dengan merge true untuk mengupdate sebagian/seluruh data
+                                batch.set(docRef, record, { merge: true });
+                            });
+                            
+                            await batch.commit();
+                        }
+
+                        fileUpdatePending.value = ''; // Reset input file
+                        
+                        if (updatedCount > 0) {
+                            window.showAlert('success', 'Update Berhasil', `Sebanyak ${updatedCount.toLocaleString()} data pendingan berhasil dicocokkan dan diupdate di Firebase.`);
+                            loadDataFromDB(); // Muat ulang visualisasi dan tabel
+                        } else {
+                            window.showAlert('success', 'Tidak Ada Update', 'Tidak ada proses update. Data pendingan di sistem tidak memiliki awb yang cocok dengan file Anda.');
+                            statusText.textContent = "Sistem Manajemen Data Siap Digunakan";
+                        }
+                    } catch (error) {
+                        console.error("Firebase Update Error:", error);
+                        window.showAlert('error', 'Database Error', 'Gagal memproses update ke dalam Firebase. Pastikan koneksi jaringan stabil.');
+                    }
+
+                } catch (err) {
+                    window.showAlert('error', 'Format Salah', "Gagal membaca file update. Pastikan format delimiter '|' dan kolom 'awb_no' tersedia.");
+                    statusText.textContent = "Sistem Manajemen Data Siap Digunakan";
+                }
+            };
+            
+            reader.onerror = function() {
+                window.showAlert('error', 'Gagal Baca File', "Terjadi kesalahan sistem saat membaca file komputer Anda.");
+            };
+
+            reader.readAsText(file);
+        });
+
+        // --- ALUR HAPUS DATA ---
+        btnHapusData.addEventListener('click', function() {
+            window.openModal('modalConfirmDelete');
+        });
+
+        document.getElementById('btnConfirmDelete').addEventListener('click', async () => {
+            window.closeModal('modalConfirmDelete');
+            statusText.textContent = "Menghapus data dari Cloud...";
+            
+            try {
+                if (!auth.currentUser) throw new Error("Pengguna belum terautentikasi.");
+
+                const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
+                const docsToDelete = [];
+                querySnapshot.forEach((docSnap) => {
+                    docsToDelete.push(docSnap.ref);
+                });
+                
+                // Gunakan Batch Write untuk menghapus dokumen dalam jumlah banyak
+                const batchSize = 450;
+                for (let i = 0; i < docsToDelete.length; i += batchSize) {
+                    const chunk = docsToDelete.slice(i, i + batchSize);
+                    const batch = writeBatch(db);
+                    chunk.forEach(ref => {
+                        batch.delete(ref);
+                    });
+                    await batch.commit();
+                }
+                
+                rawData = [];
+                filteredData = [];
+                window.showAlert('success', 'Database Dibersihkan', 'Seluruh data operasional telah berhasil dihapus dari Firebase.');
+                loadDataFromDB(); // otomatis mengembalikan ke empty state
+            } catch (error) {
+                console.error("Firebase Delete Error:", error);
+                window.showAlert('error', 'Gagal Hapus', 'Gagal menghapus data dari Firebase.');
+            }
+        });
+
+        // Inisialisasi Dashboard setelah data diload
+        function initDashboard() {
+            emptyState.classList.add('hidden');
+            dashboardContent.classList.remove('hidden');
+            
+            populateDropdowns();
+            resetFilters();
+            applyFilters();
+        }
+
+        // Mengisi pilihan unik untuk Dropdown Filter
+        function populateDropdowns() {
+            const getUnique = (field) => {
+                const unique = [...new Set(rawData.map(item => item[field]).filter(Boolean))];
+                return unique.sort();
+            };
+
+            const options = {
+                destination_staging: getUnique('destination_staging'),
+                service_code: getUnique('service_code'),
+                use_cod: getUnique('use_cod'),
+                channel: getUnique('channel'),
+                delivery_sla: getUnique('delivery_sla')
+            };
+
+            // Helper function untuk isi dropdown
+            const fillSelect = (selectElem, optArray, defaultText) => {
+                selectElem.innerHTML = `<option value="All">${defaultText}</option>`;
+                optArray.forEach(opt => {
+                    selectElem.innerHTML += `<option value="${opt}">${opt}</option>`;
+                });
+            };
+
+            fillSelect(inputs.destination_staging, options.destination_staging, 'Semua Staging');
+            fillSelect(inputs.service_code, options.service_code, 'Semua Service');
+            fillSelect(inputs.use_cod, options.use_cod, 'Semua Status');
+            fillSelect(inputs.channel, options.channel, 'Semua Channel');
+            fillSelect(inputs.delivery_sla, options.delivery_sla, 'Semua SLA');
+        }
+
+        function resetFilters() {
+            filterInputs.forEach(input => {
+                if(input.tagName === 'SELECT') input.value = 'All';
+                if(input.tagName === 'INPUT') input.value = '';
+            });
+        }
+
+        // Trigger filter ketika ada perubahan input
+        filterInputs.forEach(input => {
+            input.addEventListener('change', applyFilters);
+        });
+
+        // Logika Filter Data
+        function applyFilters() {
+            const startStr = inputs.startDate.value;
+            const endStr = inputs.endDate.value;
+            const filters = {
+                destination_staging: inputs.destination_staging.value,
+                service_code: inputs.service_code.value,
+                use_cod: inputs.use_cod.value,
+                channel: inputs.channel.value,
+                delivery_sla: inputs.delivery_sla.value
+            };
+
+            let startDt = startStr ? new Date(startStr) : null;
+            let endDt = endStr ? new Date(endStr + 'T23:59:59') : null;
+
+            filteredData = rawData.filter(row => {
+                let isValid = true;
+
+                // Filter Tanggal (berdasarkan kolom input_date yang disematkan saat upload)
+                if (row.input_date) {
+                    const rowDt = new Date(row.input_date);
+                    if (startDt && rowDt < startDt) isValid = false;
+                    if (endDt && rowDt > endDt) isValid = false;
+                }
+
+                // Filter Dropdown
+                for (const key in filters) {
+                    if (filters[key] !== 'All' && row[key] !== filters[key]) {
+                        isValid = false;
+                        break;
+                    }
+                }
+
+                return isValid;
+            });
+
+            updateUI();
+        }
+
+        // Update Summary & Charts
+        function updateUI() {
+            // Update Summary Stats
+            document.getElementById('statTotalRaw').textContent = rawData.length.toLocaleString();
+            document.getElementById('statTotalFiltered').textContent = filteredData.length.toLocaleString();
+            
+            const slaOk = filteredData.filter(d => d.delivery_sla === 'OK').length;
+            const slaMissed = filteredData.filter(d => d.delivery_sla === 'Missed').length;
+            
+            document.getElementById('statSlaOk').textContent = slaOk.toLocaleString();
+            document.getElementById('statSlaMissed').textContent = slaMissed.toLocaleString();
+
+            // Render Trend 80_tm Chart
+            renderTrend80Chart();
+
+            // Prepare Chart Data
+            const destData = getChartData('destination_staging').slice(0, 15); // Ambil Top 15 saja agar tidak terlalu panjang
+            const serviceData = getChartData('service_code');
+            const codData = getChartData('use_cod');
+            const channelData = getChartData('channel');
+            const slaData = getChartData('delivery_sla');
+
+            // Render Charts
+            renderBarChart('chartDestination', destData, 'bg-indigo-500');
+            renderBarChart('chartService', serviceData, 'bg-blue-500');
+            renderBarChart('chartSla', slaData, 'bg-emerald-500');
+            renderBarChart('chartChannel', channelData, 'bg-amber-500');
+            renderBarChart('chartCod', codData, 'bg-purple-500');
+
+            // Render Table Status
+            renderStatusTable();
+            
+            // Render Table LT 47-80
+            renderLtTable();
+
+            // Render Table Expect Delivery
+            renderExpTable();
+
+            // Render Table Pendingan
+            renderPendingTable();
+            
+            // Render Table Return
+            renderReturnTable();
+        }
+
+        // Agregasi Data untuk Chart
+        function getChartData(field) {
+            const counts = {};
+            filteredData.forEach(row => {
+                const key = row[field] || 'N/A';
+                counts[key] = (counts[key] || 0) + 1;
+            });
+            
+            return Object.keys(counts)
+                .map(key => ({ name: key, count: counts[key] }))
+                .sort((a, b) => b.count - a.count); // Descending
+        }
+
+        // Fungsi menggambar Chart Bar HTML
+        function renderBarChart(containerId, data, colorClass) {
+            const container = document.getElementById(containerId);
+            
+            if (data.length === 0) {
+                container.innerHTML = `<div class="h-full flex items-center justify-center text-sm text-gray-400 py-10">Tidak ada data</div>`;
+                return;
+            }
+
+            const maxCount = Math.max(...data.map(d => d.count), 1);
+            
+            let html = '<div class="space-y-3">';
+            data.forEach(item => {
+                const percentage = (item.count / maxCount) * 100;
+                html += `
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between text-xs font-medium text-gray-600">
+                            <span class="truncate pr-2">${item.name}</span>
+                            <span>${item.count.toLocaleString()}</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="h-2 rounded-full ${colorClass}" style="width: ${percentage}%; transition: width 0.5s ease-out"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+
+        // Fungsi menggambar Chart Bar Vertikal untuk 80_tm
+        function renderTrend80Chart() {
+            const container = document.getElementById('chartTrend80');
+            const dateCounts = {};
+
+            filteredData.forEach(row => {
+                // Cek jika 80_tm ada isinya
+                if (row['80_tm'] && row['80_tm'].trim() !== '') {
+                    const dateStr = row['80_tm'].trim().split(' ')[0]; // Ekstrak hanya YYYY-MM-DD
+                    if (!dateCounts[dateStr]) {
+                        dateCounts[dateStr] = 0;
+                    }
+                    dateCounts[dateStr]++;
+                }
+            });
+
+            // Urutkan tanggal secara kronologis
+            const sortedDates = Object.keys(dateCounts).sort((a, b) => new Date(a) - new Date(b));
+
+            if (sortedDates.length === 0) {
+                container.innerHTML = `<div class="w-full h-full flex items-center justify-center text-sm text-gray-400 py-10">Tidak ada data penyelesaian (80_tm) pada rentang ini</div>`;
+                return;
+            }
+
+            // Cari nilai max untuk menghitung persentase tinggi bar
+            const maxCount = Math.max(...Object.values(dateCounts), 1);
+
+            let html = '';
+            sortedDates.forEach(date => {
+                const count = dateCounts[date];
+                const heightPct = (count / maxCount) * 100;
+                
+                // Format label tanggal (Misal: "24 Feb")
+                const dObj = new Date(date);
+                const day = dObj.getDate().toString().padStart(2, '0');
+                const month = dObj.toLocaleString('id-ID', { month: 'short' });
+                const dateLabel = `${day} ${month}`;
+
+                html += `
+                    <div class="flex flex-col items-center flex-1 min-w-[50px] max-w-[80px] h-full justify-end group">
+                        <!-- Nilai/Value ditampilkan di atas bar (tanpa sumbu Y) -->
+                        <span class="text-xs font-bold text-gray-700 mb-1">${count.toLocaleString()}</span>
+                        <div class="w-full bg-indigo-500 rounded-t-md transition-all duration-500 hover:bg-indigo-600" style="height: ${Math.max(heightPct, 2)}%;"></div>
+                        <!-- Label Sumbu X (Tanggal saja) -->
+                        <span class="text-[10px] text-gray-500 mt-2 whitespace-nowrap">${dateLabel}</span>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Fungsi menggambar Tabel Pencapaian Status
+        function renderStatusTable() {
+            const stagingGroups = {};
+            let tAwb = 0, t47 = 0, t204 = 0, t205 = 0, t80 = 0;
+
+            filteredData.forEach(row => {
+                const staging = row.destination_staging || 'Unknown';
+                if (!stagingGroups[staging]) {
+                    stagingGroups[staging] = { total: 0, c47: 0, c204: 0, c205: 0, c80: 0 };
+                }
+                
+                stagingGroups[staging].total++;
+                tAwb++;
+
+                // Cek isi waktu (time) untuk setiap kolom status. Jika tidak kosong, hitung ++.
+                if (row._47_tm && row._47_tm.trim() !== '') { stagingGroups[staging].c47++; t47++; }
+                if (row._204_tm && row._204_tm.trim() !== '') { stagingGroups[staging].c204++; t204++; }
+                // Untuk 205, karena di header file ada _205_tm_first dan _205_tm_last, kita cek salah satunya
+                if ((row._205_tm_first && row._205_tm_first.trim() !== '') || (row._205_tm_last && row._205_tm_last.trim() !== '')) { stagingGroups[staging].c205++; t205++; }
+                if (row['80_tm'] && row['80_tm'].trim() !== '') { stagingGroups[staging].c80++; t80++; }
+            });
+
+            // Ubah objek ke array dan urutkan dari Total AWB terbanyak
+            const tableData = Object.keys(stagingGroups).map(key => ({
+                staging: key,
+                ...stagingGroups[key]
+            })).sort((a, b) => b.total - a.total);
+
+            const tbody = document.getElementById('tableStatusBody');
+            const tfoot = document.getElementById('tableStatusFoot');
+            
+            if (tableData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-gray-400">Tidak ada data untuk ditampilkan</td></tr>';
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            // Helper menghitung persen
+            const formatPct = (count, total) => total === 0 ? '0.00%' : ((count / total) * 100).toFixed(2) + '%';
+
+            // Generate Baris Tabel
+            let rowsHtml = '';
+            tableData.forEach(item => {
+                rowsHtml += `
+                    <tr class="hover:bg-blue-50/50 transition-colors">
+                        <td class="p-3 text-gray-800 font-medium">${item.staging}</td>
+                        <td class="p-3 text-right text-gray-600 border-l border-gray-100">${item.total.toLocaleString()}</td>
+                        <td class="p-3 text-right text-gray-600 border-l border-gray-100">${formatPct(item.c47, item.total)}</td>
+                        <td class="p-3 text-right text-gray-600 border-l border-gray-100">${formatPct(item.c204, item.total)}</td>
+                        <td class="p-3 text-right text-gray-600 border-l border-gray-100">${formatPct(item.c205, item.total)}</td>
+                        <td class="p-3 text-right text-gray-600 border-l border-gray-100">${formatPct(item.c80, item.total)}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = rowsHtml;
+
+            // Generate Footer/Keseluruhan
+            tfoot.innerHTML = `
+                <tr>
+                    <td class="p-3 text-blue-700">TOTAL KESELURUHAN</td>
+                    <td class="p-3 text-right text-blue-700 border-l border-gray-200">${tAwb.toLocaleString()}</td>
+                    <td class="p-3 text-right text-blue-700 border-l border-gray-200">${formatPct(t47, tAwb)}</td>
+                    <td class="p-3 text-right text-blue-700 border-l border-gray-200">${formatPct(t204, tAwb)}</td>
+                    <td class="p-3 text-right text-blue-700 border-l border-gray-200">${formatPct(t205, tAwb)}</td>
+                    <td class="p-3 text-right text-blue-700 border-l border-gray-200">${formatPct(t80, tAwb)}</td>
+                </tr>
+            `;
+        }
+
+        // Fungsi menggambar Tabel Lead Time 47 - 80
+        function renderLtTable() {
+            const stagingGroups = {};
+            let tAwb = 0;
+            let sumTotalHours = 0;
+            let globalMax = -Infinity;
+            let globalMin = Infinity;
+
+            filteredData.forEach(row => {
+                // Pastikan 80_tm dan _47_tm ada dan tidak kosong
+                if (row['80_tm'] && row['80_tm'].trim() !== '' && row._47_tm && row._47_tm.trim() !== '') {
+                    const dt80 = new Date(row['80_tm']);
+                    const dt47 = new Date(row._47_tm);
+                    
+                    if (!isNaN(dt80) && !isNaN(dt47)) {
+                        const diffMs = dt80 - dt47;
+                        const diffHours = diffMs / (1000 * 60 * 60); // Langsung mengonversi selisih milidetik ke Total Jam
+
+                        const staging = row.destination_staging || 'Unknown';
+                        if (!stagingGroups[staging]) {
+                            stagingGroups[staging] = { count: 0, sumHours: 0, max: -Infinity, min: Infinity };
+                        }
+
+                        stagingGroups[staging].count++;
+                        stagingGroups[staging].sumHours += diffHours;
+                        if (diffHours > stagingGroups[staging].max) stagingGroups[staging].max = diffHours;
+                        if (diffHours < stagingGroups[staging].min) stagingGroups[staging].min = diffHours;
+
+                        tAwb++;
+                        sumTotalHours += diffHours;
+                        if (diffHours > globalMax) globalMax = diffHours;
+                        if (diffHours < globalMin) globalMin = diffHours;
+                    }
+                }
+            });
+
+            // Ubah objek ke array dan urutkan dari Total AWB terbanyak
+            const tableData = Object.keys(stagingGroups).map(key => ({
+                staging: key,
+                ...stagingGroups[key]
+            })).sort((a, b) => b.count - a.count);
+
+            const tbody = document.getElementById('tableLtBody');
+            const tfoot = document.getElementById('tableLtFoot');
+            
+            if (tableData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-gray-400">Tidak ada data LT yang valid untuk ditampilkan</td></tr>';
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            // Helper format jam
+            const formatHr = (val) => val === Infinity || val === -Infinity ? '-' : val.toFixed(2);
+
+            // Generate Baris Tabel
+            let rowsHtml = '';
+            tableData.forEach(item => {
+                const avgHours = item.sumHours / item.count;
+                rowsHtml += `
+                    <tr class="hover:bg-blue-50/50 transition-colors">
+                        <td class="p-3 text-gray-800 font-medium">${item.staging}</td>
+                        <td class="p-3 text-right text-gray-600 border-l border-gray-100">${item.count.toLocaleString()}</td>
+                        <td class="p-3 border-l border-gray-100">
+                            <div class="flex justify-end items-center gap-3">
+                                <span class="text-base font-bold text-gray-800">${formatHr(avgHours)} Jam</span>
+                                <div class="flex flex-col text-xs text-gray-500 text-left border-l border-gray-200 pl-3 py-1">
+                                    <span>Max: <strong>${formatHr(item.max)}</strong></span>
+                                    <span>Min: <strong>${formatHr(item.min)}</strong></span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = rowsHtml;
+
+            // Generate Footer/Keseluruhan
+            const globalAvg = sumTotalHours / tAwb;
+            tfoot.innerHTML = `
+                <tr>
+                    <td class="p-3 text-blue-700">TOTAL KESELURUHAN</td>
+                    <td class="p-3 text-right text-blue-700 border-l border-gray-200">${tAwb.toLocaleString()}</td>
+                    <td class="p-3 border-l border-gray-200">
+                        <div class="flex justify-end items-center gap-3 text-blue-700">
+                            <span class="text-base font-bold">${formatHr(globalAvg)} Jam</span>
+                            <div class="flex flex-col text-xs opacity-80 text-left border-l border-blue-200 pl-3 py-1">
+                                <span>Max: <strong>${formatHr(globalMax)}</strong></span>
+                                <span>Min: <strong>${formatHr(globalMin)}</strong></span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Fungsi menggambar Tabel Expect Delivery (Pivot Status EDD)
+        function renderExpTable() {
+            const stagingGroups = {};
+            let totalOverall = 0;
+            const totals = { 'Before EDD': 0, 'LastDay': 0, 'Sameday': 0, 'After EDD': 0, 'Unknown': 0 };
+
+            filteredData.forEach(row => {
+                const staging = row.destination_staging || 'Unknown';
+                let status = 'Unknown';
+                
+                // Pastikan ada tanggal expect delivery dan tanggal input
+                if (row.expect_delivery_tm && row.expect_delivery_tm.trim() !== '' && row.input_date) {
+                    const expDateStr = row.expect_delivery_tm.trim().split(' ')[0]; // Ambil YYYY-MM-DD
+                    const inDateStr = row.input_date; // Format YYYY-MM-DD
+                    
+                    // Parse menjadi objek Date (Set ke jam 00:00:00 agar perbandingan hari akurat)
+                    const dExp = new Date(expDateStr + 'T00:00:00');
+                    const dIn = new Date(inDateStr + 'T00:00:00');
+                    
+                    if (!isNaN(dExp) && !isNaN(dIn)) {
+                        const diffTime = dExp - dIn;
+                        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); // Selisih dalam Hari
+                        
+                        if (diffDays < 0) status = 'Before EDD';
+                        else if (diffDays === 0) status = 'LastDay';
+                        else if (diffDays === 1) status = 'Sameday';
+                        else if (diffDays >= 2) status = 'After EDD';
+                    }
+                }
+
+                if (!stagingGroups[staging]) {
+                    stagingGroups[staging] = { 
+                        total: 0, 
+                        statuses: { 'Before EDD': 0, 'LastDay': 0, 'Sameday': 0, 'After EDD': 0, 'Unknown': 0 } 
+                    };
+                }
+
+                stagingGroups[staging].statuses[status]++;
+                stagingGroups[staging].total++;
+
+                totals[status]++;
+                totalOverall++;
+            });
+
+            // Ubah objek ke array dan urutkan dari Total AWB terbanyak
+            const tableData = Object.keys(stagingGroups).map(key => ({
+                staging: key,
+                ...stagingGroups[key]
+            })).sort((a, b) => b.total - a.total);
+
+            const thead = document.getElementById('tableExpHead');
+            const tbody = document.getElementById('tableExpBody');
+            const tfoot = document.getElementById('tableExpFoot');
+
+            if (tableData.length === 0) {
+                thead.innerHTML = '<tr><th class="p-3">Destination Staging</th></tr>';
+                tbody.innerHTML = '<tr><td class="p-6 text-center text-gray-400">Tidak ada data untuk ditampilkan</td></tr>';
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            // Kolom utama yang ditampilkan
+            const columns = ['Before EDD', 'LastDay', 'Sameday', 'After EDD'];
+            // Tampilkan kolom 'Unknown' hanya jika ada data yang tanggalnya kosong/tidak valid
+            const showUnknown = totals['Unknown'] > 0;
+            const displayCols = [...columns];
+            if (showUnknown) displayCols.push('Unknown');
+
+            // Generate Header Tabel
+            let headHtml = `<tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
+                <th class="p-3 font-semibold sticky left-0 bg-gray-50">Destination Staging</th>`;
+            displayCols.forEach(col => {
+                headHtml += `<th class="p-3 font-semibold text-right border-l border-gray-200">${col}</th>`;
+            });
+            headHtml += `<th class="p-3 font-semibold text-right border-l border-gray-200 bg-blue-50/50">Total</th></tr>`;
+            thead.innerHTML = headHtml;
+
+            // Generate Baris Tabel
+            let rowsHtml = '';
+            tableData.forEach(item => {
+                rowsHtml += `
+                    <tr class="hover:bg-blue-50/50 transition-colors">
+                        <td class="p-3 text-gray-800 font-medium sticky left-0 bg-white">${item.staging}</td>`;
+                
+                displayCols.forEach(col => {
+                    const count = item.statuses[col] || 0;
+                    rowsHtml += `<td class="p-3 text-right text-gray-600 border-l border-gray-100">${count > 0 ? count.toLocaleString() : '-'}</td>`;
+                });
+                
+                rowsHtml += `<td class="p-3 text-right font-bold text-gray-800 border-l border-gray-100 bg-blue-50/20">${item.total.toLocaleString()}</td></tr>`;
+            });
+            tbody.innerHTML = rowsHtml;
+
+            // Generate Footer/Keseluruhan
+            let footHtml = `
+                <tr>
+                    <td class="p-3 text-blue-700 sticky left-0 bg-gray-50">TOTAL KESELURUHAN</td>`;
+            displayCols.forEach(col => {
+                footHtml += `<td class="p-3 text-right text-blue-700 border-l border-gray-200">${totals[col].toLocaleString()}</td>`;
+            });
+            footHtml += `<td class="p-3 text-right font-bold text-blue-700 border-l border-gray-200 bg-blue-50/50">${totalOverall.toLocaleString()}</td></tr>`;
+            tfoot.innerHTML = footHtml;
+        }
+
+        // Fungsi mengunduh CSV AWB Pending
+        window.downloadPendingCsv = function(button, targetStaging) {
+            let csvContent = "Destination Staging,AWB\n"; // Header CSV
+            let hasData = false;
+            
+            // Loop ulang ke data yang terfilter untuk mengumpulkan AWB pending
+            filteredData.forEach(row => {
+                // Pending berarti 80_tm kosong DAN _55_tm kosong
+                if ((!row['80_tm'] || row['80_tm'].trim() === '') && (!row['_55_tm'] || row['_55_tm'].trim() === '')) {
+                    
+                    let fopCode = (row.fop_code_internal && row.fop_code_internal.trim() !== '') ? row.fop_code_internal.trim() : 'Belum Diupdate';
+                    // Keluarkan paket dengan fop_code_internal 80 dari pendingan
+                    if (fopCode === '80') {
+                        return;
+                    }
+
+                    const staging = row.destination_staging || 'Unknown';
+                    const awb = row.awb;
+                    
+                    if (awb) {
+                        // Kumpulkan AWB berdasarkan tombol yang diklik (spesifik staging atau semuanya)
+                        if (targetStaging === 'ALL' || staging === targetStaging) {
+                            // Menggunakan quote untuk mencegah error jika nama staging ada tanda koma
+                            csvContent += `"${staging}","${awb}"\n`;
+                            hasData = true;
+                        }
+                    }
+                }
+            });
+
+            if (!hasData) return;
+
+            // Proses pembuatan file CSV dan Trigger Download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            const fileName = targetStaging === 'ALL' 
+                ? 'Pending_AWB_Semua_Staging.csv' 
+                : `Pending_AWB_${targetStaging.replace(/\s+/g, '_')}.csv`;
+
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Animasi interaktif pada tombol setelah berhasil download
+            const oldHTML = button.innerHTML;
+            button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Terunduh`;
+            
+            // Ganti warna menjadi hijau
+            const isSemua = targetStaging === 'ALL';
+            button.className = "px-3 py-1 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-md transition-colors whitespace-nowrap";
+            
+            // Kembalikan ke warna asli setelah 2 detik
+            setTimeout(() => {
+                button.innerHTML = oldHTML;
+                if (isSemua) {
+                    button.className = "px-3 py-1 text-xs font-bold bg-red-100 text-red-700 hover:bg-red-200 rounded-md transition-colors whitespace-nowrap";
+                } else {
+                    button.className = "px-3 py-1 text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors whitespace-nowrap";
+                }
+            }, 2000);
+        };
+
+        // Fungsi mengunduh CSV AWB Return
+        window.downloadReturnCsv = function(button, targetStaging) {
+            let csvContent = "Destination Staging,AWB\n"; // Header CSV
+            let hasData = false;
+            
+            filteredData.forEach(row => {
+                // Return berarti _55_tm ada isinya
+                if (row['_55_tm'] && row['_55_tm'].trim() !== '') {
+                    const staging = row.destination_staging || 'Unknown';
+                    const awb = row.awb;
+                    
+                    if (awb) {
+                        if (targetStaging === 'ALL' || staging === targetStaging) {
+                            csvContent += `"${staging}","${awb}"\n`;
+                            hasData = true;
+                        }
+                    }
+                }
+            });
+
+            if (!hasData) return;
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            const fileName = targetStaging === 'ALL' 
+                ? 'Return_AWB_Semua_Staging.csv' 
+                : `Return_AWB_${targetStaging.replace(/\s+/g, '_')}.csv`;
+
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            const oldHTML = button.innerHTML;
+            button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Terunduh`;
+            
+            button.className = "px-3 py-1 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-md transition-colors whitespace-nowrap border border-emerald-200 shadow-sm";
+            
+            setTimeout(() => {
+                button.innerHTML = oldHTML;
+                button.className = "px-3 py-1 text-xs font-bold bg-white text-orange-700 hover:bg-orange-100 rounded-md transition-colors whitespace-nowrap border border-orange-200 shadow-sm";
+            }, 2000);
+        };
+
+        // Fungsi menggambar Tabel Pendingan
+        function renderPendingTable() {
+            const stagingGroups = {};
+            const fopSet = new Set();
+            let totalPendingOverall = 0;
+            const totalsPerFop = {};
+
+            filteredData.forEach(row => {
+                // Cek apakah 80_tm kosong DAN _55_tm kosong (Pending sejati)
+                if ((!row['80_tm'] || row['80_tm'].trim() === '') && (!row['_55_tm'] || row['_55_tm'].trim() === '')) {
+                    const staging = row.destination_staging || 'Unknown';
+                    // Ambil fop code, jika kosong/belum diupdate beri label khusus
+                    let fopCode = (row.fop_code_internal && row.fop_code_internal.trim() !== '') ? row.fop_code_internal.trim() : 'Belum Diupdate';
+                    
+                    // Keluarkan paket dengan fop_code_internal 80 dari pendingan
+                    if (fopCode === '80') {
+                        return;
+                    }
+
+                    fopSet.add(fopCode);
+
+                    if (!stagingGroups[staging]) {
+                        stagingGroups[staging] = { total: 0, fops: {} };
+                    }
+                    
+                    if (!stagingGroups[staging].fops[fopCode]) {
+                        stagingGroups[staging].fops[fopCode] = 0;
+                    }
+
+                    stagingGroups[staging].fops[fopCode]++;
+                    stagingGroups[staging].total++;
+
+                    if (!totalsPerFop[fopCode]) totalsPerFop[fopCode] = 0;
+                    totalsPerFop[fopCode]++;
+                    totalPendingOverall++;
+                }
+            });
+
+            const sortedFops = Array.from(fopSet).sort((a, b) => {
+                if (a === 'Belum Diupdate') return 1;
+                if (b === 'Belum Diupdate') return -1;
+                return a.localeCompare(b);
+            });
+
+            const tableData = Object.keys(stagingGroups).map(key => ({
+                staging: key,
+                ...stagingGroups[key]
+            })).sort((a, b) => b.total - a.total);
+
+            const thead = document.getElementById('tablePendingHead');
+            const tbody = document.getElementById('tablePendingBody');
+            const tfoot = document.getElementById('tablePendingFoot');
+
+            if (tableData.length === 0) {
+                thead.innerHTML = '<tr><th class="p-3">Destination Staging</th></tr>';
+                tbody.innerHTML = '<tr><td class="p-6 text-center text-gray-400">Tidak ada data pendingan. Semua AWB sudah terkirim (80_tm terisi).</td></tr>';
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            // Generate Header Tabel secara dinamis
+            let headHtml = `<tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
+                <th class="p-3 font-semibold sticky left-0 bg-gray-50">Destination Staging</th>`;
+            sortedFops.forEach(fop => {
+                headHtml += `<th class="p-3 font-semibold text-right border-l border-gray-200">${fop}</th>`;
+            });
+            headHtml += `<th class="p-3 font-semibold text-right border-l border-gray-200 bg-red-50">Total</th></tr>`;
+            thead.innerHTML = headHtml;
+
+            // Generate Baris Tabel
+            let rowsHtml = '';
+            tableData.forEach(item => {
+                rowsHtml += `
+                    <tr class="hover:bg-red-50/30 transition-colors">
+                        <td class="p-3 text-gray-800 font-medium sticky left-0 bg-white">${item.staging}</td>`;
+                
+                sortedFops.forEach(fop => {
+                    const count = item.fops[fop] || 0;
+                    rowsHtml += `<td class="p-3 text-right text-gray-600 border-l border-gray-100">${count > 0 ? count.toLocaleString() : '-'}</td>`;
+                });
+
+                rowsHtml += `<td class="p-3 text-right text-red-600 font-bold border-l border-gray-100 bg-red-50/20">${item.total.toLocaleString()}</td></tr>`;
+            });
+            tbody.innerHTML = rowsHtml;
+
+            // Generate Footer/Keseluruhan
+            let footHtml = `
+                <tr>
+                    <td class="p-3 flex items-center justify-between sticky left-0 bg-red-50">
+                        <span>TOTAL KESELURUHAN</span>
+                        <button onclick="downloadPendingCsv(this, 'ALL')" class="px-3 py-1 text-xs font-bold bg-white text-red-700 hover:bg-red-100 rounded-md transition-colors whitespace-nowrap border border-red-200 shadow-sm" title="Download CSV SELURUH AWB pending di tabel ini">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            Download Semua CSV
+                        </button>
+                    </td>`;
+            
+            sortedFops.forEach(fop => {
+                footHtml += `<td class="p-3 text-right border-l border-red-200">${(totalsPerFop[fop] || 0).toLocaleString()}</td>`;
+            });
+            
+            footHtml += `<td class="p-3 text-right border-l border-red-200 text-base font-bold">${totalPendingOverall.toLocaleString()}</td></tr>`;
+            tfoot.innerHTML = footHtml;
+        }
+
+        // Fungsi menggambar Tabel Paket Return
+        function renderReturnTable() {
+            const stagingGroups = {};
+            const fopSet = new Set();
+            let totalReturnOverall = 0;
+            const totalsPerFop = {};
+
+            filteredData.forEach(row => {
+                // Cek apakah _55_tm ada isinya (Status Return)
+                if (row['_55_tm'] && row['_55_tm'].trim() !== '') {
+                    const staging = row.destination_staging || 'Unknown';
+                    let fopCode = (row.fop_code_internal && row.fop_code_internal.trim() !== '') ? row.fop_code_internal.trim() : 'Belum Diupdate';
+                    
+                    fopSet.add(fopCode);
+
+                    if (!stagingGroups[staging]) {
+                        stagingGroups[staging] = { total: 0, fops: {} };
+                    }
+                    
+                    if (!stagingGroups[staging].fops[fopCode]) {
+                        stagingGroups[staging].fops[fopCode] = 0;
+                    }
+
+                    stagingGroups[staging].fops[fopCode]++;
+                    stagingGroups[staging].total++;
+
+                    if (!totalsPerFop[fopCode]) totalsPerFop[fopCode] = 0;
+                    totalsPerFop[fopCode]++;
+                    totalReturnOverall++;
+                }
+            });
+
+            const sortedFops = Array.from(fopSet).sort((a, b) => {
+                if (a === 'Belum Diupdate') return 1;
+                if (b === 'Belum Diupdate') return -1;
+                return a.localeCompare(b);
+            });
+
+            const tableData = Object.keys(stagingGroups).map(key => ({
+                staging: key,
+                ...stagingGroups[key]
+            })).sort((a, b) => b.total - a.total);
+
+            const thead = document.getElementById('tableReturnHead');
+            const tbody = document.getElementById('tableReturnBody');
+            const tfoot = document.getElementById('tableReturnFoot');
+
+            if (tableData.length === 0) {
+                thead.innerHTML = '<tr><th class="p-3">Destination Staging</th></tr>';
+                tbody.innerHTML = '<tr><td class="p-6 text-center text-gray-400">Tidak ada paket return (_55_tm kosong semua).</td></tr>';
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            let headHtml = `<tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
+                <th class="p-3 font-semibold sticky left-0 bg-gray-50">Destination Staging</th>`;
+            sortedFops.forEach(fop => {
+                headHtml += `<th class="p-3 font-semibold text-right border-l border-gray-200">${fop}</th>`;
+            });
+            headHtml += `<th class="p-3 font-semibold text-right border-l border-gray-200 bg-orange-50">Total</th></tr>`;
+            thead.innerHTML = headHtml;
+
+            let rowsHtml = '';
+            tableData.forEach(item => {
+                rowsHtml += `
+                    <tr class="hover:bg-orange-50/30 transition-colors">
+                        <td class="p-3 text-gray-800 font-medium sticky left-0 bg-white">${item.staging}</td>`;
+                
+                sortedFops.forEach(fop => {
+                    const count = item.fops[fop] || 0;
+                    rowsHtml += `<td class="p-3 text-right text-gray-600 border-l border-gray-100">${count > 0 ? count.toLocaleString() : '-'}</td>`;
+                });
+
+                rowsHtml += `<td class="p-3 text-right text-orange-600 font-bold border-l border-gray-100 bg-orange-50/20">${item.total.toLocaleString()}</td></tr>`;
+            });
+            tbody.innerHTML = rowsHtml;
+
+            let footHtml = `
+                <tr>
+                    <td class="p-3 flex items-center justify-between sticky left-0 bg-orange-50">
+                        <span>TOTAL KESELURUHAN</span>
+                        <button onclick="downloadReturnCsv(this, 'ALL')" class="px-3 py-1 text-xs font-bold bg-white text-orange-700 hover:bg-orange-100 rounded-md transition-colors whitespace-nowrap border border-orange-200 shadow-sm" title="Download CSV SELURUH AWB return di tabel ini">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            Download Semua CSV
+                        </button>
+                    </td>`;
+            
+            sortedFops.forEach(fop => {
+                footHtml += `<td class="p-3 text-right border-l border-orange-200">${(totalsPerFop[fop] || 0).toLocaleString()}</td>`;
+            });
+            
+            footHtml += `<td class="p-3 text-right border-l border-orange-200 text-base font-bold">${totalReturnOverall.toLocaleString()}</td></tr>`;
+            tfoot.innerHTML = footHtml;
+        }
+
+    </script>
+</body>
+</html>
