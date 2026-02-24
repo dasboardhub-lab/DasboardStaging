@@ -21,6 +21,76 @@
         .chart-container::-webkit-scrollbar-thumb:hover {
             background: #94a3b8; 
         }
+
+        /* --- ANIMASI UIVERSE SVG --- */
+        .pl {
+          width: 6em;
+          height: 6em;
+        }
+
+        .pl__ring {
+          animation: ringA 2s linear infinite;
+        }
+
+        .pl__ring--a {
+          stroke: #f42f25;
+        }
+
+        .pl__ring--b {
+          animation-name: ringB;
+          stroke: #f49725;
+        }
+
+        .pl__ring--c {
+          animation-name: ringC;
+          stroke: #255ff4;
+        }
+
+        .pl__ring--d {
+          animation-name: ringD;
+          stroke: #f42582;
+        }
+
+        /* Animations */
+        @keyframes ringA {
+          from, 4% { stroke-dasharray: 0 660; stroke-width: 20; stroke-dashoffset: -330; }
+          12% { stroke-dasharray: 60 600; stroke-width: 30; stroke-dashoffset: -335; }
+          32% { stroke-dasharray: 60 600; stroke-width: 30; stroke-dashoffset: -595; }
+          40%, 54% { stroke-dasharray: 0 660; stroke-width: 20; stroke-dashoffset: -660; }
+          62% { stroke-dasharray: 60 600; stroke-width: 30; stroke-dashoffset: -665; }
+          82% { stroke-dasharray: 60 600; stroke-width: 30; stroke-dashoffset: -925; }
+          90%, to { stroke-dasharray: 0 660; stroke-width: 20; stroke-dashoffset: -990; }
+        }
+
+        @keyframes ringB {
+          from, 12% { stroke-dasharray: 0 220; stroke-width: 20; stroke-dashoffset: -110; }
+          20% { stroke-dasharray: 20 200; stroke-width: 30; stroke-dashoffset: -115; }
+          40% { stroke-dasharray: 20 200; stroke-width: 30; stroke-dashoffset: -195; }
+          48%, 62% { stroke-dasharray: 0 220; stroke-width: 20; stroke-dashoffset: -220; }
+          70% { stroke-dasharray: 20 200; stroke-width: 30; stroke-dashoffset: -225; }
+          90% { stroke-dasharray: 20 200; stroke-width: 30; stroke-dashoffset: -305; }
+          98%, to { stroke-dasharray: 0 220; stroke-width: 20; stroke-dashoffset: -330; }
+        }
+
+        @keyframes ringC {
+          from { stroke-dasharray: 0 440; stroke-width: 20; stroke-dashoffset: 0; }
+          8% { stroke-dasharray: 40 400; stroke-width: 30; stroke-dashoffset: -5; }
+          28% { stroke-dasharray: 40 400; stroke-width: 30; stroke-dashoffset: -175; }
+          36%, 58% { stroke-dasharray: 0 440; stroke-width: 20; stroke-dashoffset: -220; }
+          66% { stroke-dasharray: 40 400; stroke-width: 30; stroke-dashoffset: -225; }
+          86% { stroke-dasharray: 40 400; stroke-width: 30; stroke-dashoffset: -395; }
+          94%, to { stroke-dasharray: 0 440; stroke-width: 20; stroke-dashoffset: -440; }
+        }
+
+        @keyframes ringD {
+          from, 8% { stroke-dasharray: 0 440; stroke-width: 20; stroke-dashoffset: 0; }
+          16% { stroke-dasharray: 40 400; stroke-width: 30; stroke-dashoffset: -5; }
+          36% { stroke-dasharray: 40 400; stroke-width: 30; stroke-dashoffset: -175; }
+          44%, 50% { stroke-dasharray: 0 440; stroke-width: 20; stroke-dashoffset: -220; }
+          58% { stroke-dasharray: 40 400; stroke-width: 30; stroke-dashoffset: -225; }
+          78% { stroke-dasharray: 40 400; stroke-width: 30; stroke-dashoffset: -395; }
+          86%, to { stroke-dasharray: 0 440; stroke-width: 20; stroke-dashoffset: -440; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-gray-800 min-h-screen">
@@ -34,7 +104,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-gray-900 leading-tight">Dashboard Operasional</h1>
-                    <p class="text-xs text-gray-500" id="statusText">Sistem Manajemen Data Siap Digunakan</p>
+                    <p class="text-xs text-gray-500" id="statusText">Sistem Terhubung</p>
                 </div>
             </div>
 
@@ -51,7 +121,7 @@
                 </button>
                 <input type="file" accept=".csv" class="hidden" id="fileUpdatePending" />
 
-                <button id="btnHapusData" class="px-3 py-2 text-sm text-red-600 hover:bg-red-50 border border-red-200 rounded-lg transition-colors" title="Hapus Semua Data Database">
+                <button id="btnHapusData" class="px-3 py-2 text-sm text-red-600 hover:bg-red-50 border border-red-200 rounded-lg transition-colors" title="Hapus Data Berdasarkan Tanggal Upload">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
             </div>
@@ -353,6 +423,21 @@
 
     <!-- KUMPULAN MODAL (SYSTEM MODALS) -->
 
+    <!-- Modal Loading Global dengan Animasi Cincin -->
+    <div id="modalLoading" class="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white/95 backdrop-blur-sm px-10 py-12 rounded-3xl shadow-2xl flex flex-col items-center max-w-sm text-center transform scale-95 transition-transform duration-300 border border-gray-100">
+            <!-- SVG Animasi Uiverse.io -->
+            <svg class="pl mb-6" viewBox="0 0 240 240">
+                <circle class="pl__ring pl__ring--a" cx="120" cy="120" r="105" fill="none" stroke-width="20" stroke-dasharray="0 660" stroke-dashoffset="-330" stroke-linecap="round"></circle>
+                <circle class="pl__ring pl__ring--b" cx="120" cy="120" r="35" fill="none" stroke-width="20" stroke-dasharray="0 220" stroke-dashoffset="-110" stroke-linecap="round"></circle>
+                <circle class="pl__ring pl__ring--c" cx="85" cy="120" r="70" fill="none" stroke-width="20" stroke-dasharray="0 440" stroke-linecap="round"></circle>
+                <circle class="pl__ring pl__ring--d" cx="155" cy="120" r="70" fill="none" stroke-width="20" stroke-dasharray="0 440" stroke-linecap="round"></circle>
+            </svg>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Memproses Sistem</h3>
+            <p id="loadingMessage" class="text-sm text-gray-500 font-medium animate-pulse">Mohon tunggu sebentar...</p>
+        </div>
+    </div>
+
     <!-- Modal Password -->
     <div id="modalPassword" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-200">
@@ -380,17 +465,20 @@
         </div>
     </div>
 
-    <!-- Modal Konfirmasi Hapus -->
-    <div id="modalConfirmDelete" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+    <!-- Modal Pilih Tanggal Hapus -->
+    <div id="modalDeleteByDate" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-200">
             <div class="flex items-center gap-3 mb-4 text-red-600">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
-                <h3 class="text-lg font-bold text-gray-900">Hapus Semua Data?</h3>
+                <h3 class="text-lg font-bold text-gray-900">Hapus Data Sebagian</h3>
             </div>
-            <p class="text-sm text-gray-500 mb-6">Tindakan ini akan menghapus <strong>seluruh data</strong> dari database secara permanen dan tidak dapat dikembalikan. Lanjutkan?</p>
+            <p class="text-sm text-gray-500 mb-4">Pilih tanggal upload dari kelompok data yang ingin Anda hapus secara permanen dari sistem.</p>
+            <select id="selectDeleteDate" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none mb-6">
+                <!-- Options populated by JS -->
+            </select>
             <div class="flex justify-end gap-3">
-                <button onclick="closeModal('modalConfirmDelete')" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Batal</button>
-                <button id="btnConfirmDelete" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg">Ya, Hapus Data</button>
+                <button onclick="closeModal('modalDeleteByDate')" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Batal</button>
+                <button id="btnConfirmDeleteDate" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">Ya, Hapus Data</button>
             </div>
         </div>
     </div>
@@ -444,7 +532,6 @@
         const btnHapusData = document.getElementById('btnHapusData');
         const emptyState = document.getElementById('emptyState');
         const dashboardContent = document.getElementById('dashboardContent');
-        const statusText = document.getElementById('statusText');
 
         // Filter Inputs
         const filterInputs = document.querySelectorAll('.filter-input');
@@ -463,7 +550,6 @@
             const modal = document.getElementById(modalId);
             const content = modal.children[0];
             modal.classList.remove('hidden');
-            // Trigger reflow
             void modal.offsetWidth; 
             modal.classList.remove('opacity-0');
             content.classList.remove('scale-95');
@@ -476,7 +562,7 @@
             content.classList.add('scale-95');
             setTimeout(() => {
                 modal.classList.add('hidden');
-            }, 200); // durasi animasi
+            }, 200); 
         };
 
         window.showAlert = function(type, title, message) {
@@ -498,11 +584,34 @@
             window.openModal('modalAlert');
         };
 
+        // --- MANAJEMEN ANIMASI LOADING ---
+        window.showLoading = function(message) {
+            document.getElementById('loadingMessage').textContent = message || "Sedang memproses...";
+            const modal = document.getElementById('modalLoading');
+            const content = modal.children[0];
+            modal.classList.remove('hidden');
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+        };
+
+        window.hideLoading = function() {
+            const modal = document.getElementById('modalLoading');
+            const content = modal.children[0];
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        };
+
         // --- FIREBASE: LOAD DATA ---
         async function loadDataFromDB() {
-            if (!auth.currentUser) return; // Mencegah load jika belum terautentikasi
+            if (!auth.currentUser) return;
 
             try {
+                window.showLoading("Mengambil data dari Firebase Cloud...");
+                
                 const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
                 rawData = [];
                 const awbDeduplicator = new Set();
@@ -513,7 +622,6 @@
                 
                 querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    // Pisahkan data bundle lama dan data AWB individual baru
                     if (data.records && Array.isArray(data.records)) {
                         arrayDocs.push(data.records);
                     } else if (data.awb) {
@@ -521,14 +629,12 @@
                     }
                 });
 
-                // 1. Muat data AWB individual terlebih dahulu (karena ini adalah data yang paling baru/sudah diupdate)
                 individualDocs.forEach(data => {
                     rawData.push(data);
                     awbDeduplicator.add(data.awb);
                     loadedCount++;
                 });
 
-                // 2. Muat data array lama HANYA JIKA AWB tersebut belum ada di data yang sudah diupdate
                 arrayDocs.forEach(records => {
                     records.forEach(rec => {
                         if (rec.awb && !awbDeduplicator.has(rec.awb)) {
@@ -539,16 +645,17 @@
                     });
                 });
                 
+                window.hideLoading();
+
                 if (loadedCount > 0) {
-                    statusText.textContent = `Memuat total ${loadedCount.toLocaleString()} data AWB dari Firebase Cloud.`;
                     initDashboard();
                 } else {
                     emptyState.classList.remove('hidden');
                     dashboardContent.classList.add('hidden');
-                    statusText.textContent = "Sistem Manajemen Data Siap Digunakan";
                 }
             } catch (error) {
                 console.error("Firebase Load Error:", error);
+                window.hideLoading();
                 window.showAlert('error', 'Database Error', 'Gagal memuat data dari Firebase. Pastikan koneksi dan aturan keamanan Firestore Anda mengizinkan read.');
             }
         }
@@ -556,29 +663,26 @@
         // Inisialisasi Aplikasi (Auth & Load Data)
         async function initializeDashboardApp() {
             try {
-                statusText.textContent = "Menghubungkan ke server (Otorisasi)...";
-                // Melakukan sign in anonim TERLEBIH DAHULU dan menunggunya (await)
+                window.showLoading("Menghubungkan otorisasi sistem...");
                 await signInAnonymously(auth);
                 
-                // Track state login
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         loadDataFromDB();
+                    } else {
+                        window.hideLoading();
                     }
                 });
             } catch (error) {
                 console.error("Auth Error:", error);
+                window.hideLoading();
                 window.showAlert('error', 'Akses Ditolak', 'Gagal melakukan otorisasi login ke Firebase. Pastikan Anonymous Sign-In diaktifkan di Firebase Console.');
-                statusText.textContent = "Gagal mengautentikasi.";
             }
         }
 
-        // Jalankan Inisialisasi saat halaman siap
         initializeDashboardApp();
 
         // --- ALUR PROSES UPLOAD ---
-        
-        // 1. Tombol Upload Ditekan -> Buka Modal Password
         btnTriggerUpload.addEventListener('click', () => {
             currentAuthAction = 'UPLOAD';
             document.getElementById('inputPassword').value = '';
@@ -586,7 +690,6 @@
             window.openModal('modalPassword');
         });
 
-        // 1b. Tombol Update Pendingan Ditekan
         btnUpdatePending.addEventListener('click', () => {
             currentAuthAction = 'UPDATE_PENDING';
             document.getElementById('inputPassword').value = '';
@@ -594,12 +697,10 @@
             window.openModal('modalPassword');
         });
 
-        // 2. Submit Password
         document.getElementById('btnSubmitPassword').addEventListener('click', () => {
             const pw = document.getElementById('inputPassword').value;
             if (pw === 'Admin123') {
                 window.closeModal('modalPassword');
-                // Eksekusi aksi sesuai tombol yang ditekan awal
                 if (currentAuthAction === 'UPLOAD') {
                     fileUpload.click();
                 } else if (currentAuthAction === 'UPDATE_PENDING') {
@@ -610,36 +711,33 @@
             }
         });
 
-        // 3. File Dipilih -> Buka Modal Tanggal
         fileUpload.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            pendingFile = file; // Simpan file ke memory
+            pendingFile = file; 
             document.getElementById('inputModalDate').value = '';
             window.openModal('modalDate');
         });
 
         window.cancelDateSelection = function() {
             window.closeModal('modalDate');
-            fileUpload.value = ''; // reset
+            fileUpload.value = ''; 
             pendingFile = null;
         };
 
-        // 4. Submit Tanggal -> Proses CSV & Simpan Database
         document.getElementById('btnSubmitDate').addEventListener('click', () => {
             const selectedDate = document.getElementById('inputModalDate').value;
             if (!selectedDate) {
-                alert("Harap pilih tanggal terlebih dahulu!"); // Fallback kecil jika date kosong
+                alert("Harap pilih tanggal terlebih dahulu!"); 
                 return;
             }
 
             window.closeModal('modalDate');
-            statusText.textContent = "Memproses dan menyimpan data CSV ke Firebase...";
+            window.showLoading("Memproses dan menyimpan data CSV ke Firebase...");
             processAndSaveFile(pendingFile, selectedDate);
         });
 
-        // Fungsi Memproses File
         function processAndSaveFile(file, selectedDate) {
             const reader = new FileReader();
             
@@ -650,53 +748,46 @@
                     
                     if (lines.length < 2) throw new Error("File CSV kosong atau format tidak valid");
 
-                    // Ambil Header (Asumsi pemisah adalah pipe |). Tambahan: Hilangkan BOM (karakter tak kasat mata).
                     const headers = lines[0].split('|').map(h => h.trim().replace(/^[\u200B\u200C\uFEFF]+/, ''));
                     
-                    // Parsing Baris Data
                     const parsedRecords = lines.slice(1).map(line => {
                         const values = line.split('|');
                         const obj = {};
                         headers.forEach((header, index) => {
                             obj[header] = values[index] ? values[index].trim() : '';
                         });
-                        // SEMATKAN TANGGAL INPUT KE DATA
+                        
+                        if (obj.delivery_sla && obj.delivery_sla.match(/\d{4}-\d{2}-\d{2}/)) {
+                            obj.delivery_sla = 'Format Error';
+                        }
+                        
                         obj.input_date = selectedDate;
                         return obj;
                     });
 
-                    // --- LOGIKA PENGECEKAN DUPLIKAT AWB ---
-                    // Kumpulkan semua AWB yang sudah ada di database saat ini
                     const existingAWBs = new Set(rawData.map(r => r.awb).filter(Boolean));
-                    
                     const newValidRecords = [];
                     let duplicateCount = 0;
 
                     parsedRecords.forEach(record => {
                         const awbValue = record.awb; 
-                        
-                        // Jika AWB sudah ada di Set (baik dari database atau dari file ini sendiri)
                         if (awbValue && existingAWBs.has(awbValue)) {
-                            duplicateCount++; // Hitung sebagai duplikat dan lewati
+                            duplicateCount++; 
                         } else {
                             newValidRecords.push(record);
-                            if (awbValue) existingAWBs.add(awbValue); // Masukkan ke set untuk mencegah duplikat di baris selanjutnya dalam file yang sama
+                            if (awbValue) existingAWBs.add(awbValue); 
                         }
                     });
 
-                    // --- SIMPAN KE FIREBASE FIRESTORE ---
                     try {
                         if (!auth.currentUser) throw new Error("Pengguna belum terautentikasi.");
 
-                        // Gunakan Batch Write untuk menyimpan per AWB agar tidak kena limit 1 MB
-                        // Batas maksimal batch Firestore adalah 500 operasi, kita pakai 450 untuk aman
                         const batchSize = 450;
                         for (let i = 0; i < newValidRecords.length; i += batchSize) {
                             const chunk = newValidRecords.slice(i, i + batchSize);
                             const batch = writeBatch(db);
                             
                             chunk.forEach(record => {
-                                // Jadikan nomor AWB sebagai nama/ID dokumen
                                 const docRef = doc(db, COLLECTION_NAME, record.awb);
                                 batch.set(docRef, record);
                             });
@@ -707,29 +798,30 @@
                         fileUpload.value = ''; 
                         pendingFile = null;
                         
-                        // Pesan kustom berdasarkan hasil pengecekan duplikat
-                        let msg = `Sebanyak ${newValidRecords.length.toLocaleString()} data baru untuk tanggal ${selectedDate} telah berhasil disimpan ke Cloud.`;
+                        let msg = `Sebanyak ${newValidRecords.length.toLocaleString()} data baru untuk tanggal ${selectedDate} telah berhasil disimpan.`;
                         if (duplicateCount > 0) {
                             msg += ` Namun, ${duplicateCount.toLocaleString()} baris data dilewati karena AWB sudah ada di database.`;
                         }
                         
+                        window.hideLoading();
                         window.showAlert('success', 'Proses Selesai!', msg);
-                        loadDataFromDB(); // Muat ulang visualisasi
+                        loadDataFromDB(); 
 
                     } catch (error) {
                         console.error("Firebase Save Error:", error);
-                        window.showAlert('error', 'Gagal Simpan', 'Gagal menyimpan data ke Firebase. Pastikan aturan keamanan Firestore mengizinkan penulisan (write).');
+                        window.hideLoading();
+                        window.showAlert('error', 'Gagal Simpan', 'Gagal menyimpan data ke Firebase. Pastikan aturan keamanan mengizinkan penulisan (write).');
                     }
 
                 } catch (err) {
+                    window.hideLoading();
                     window.showAlert('error', 'Format Salah', "Gagal membaca file: Pastikan format delimiter menggunakan '|' (pipe) dan kolom 'awb' tersedia.");
-                    statusText.textContent = "Gagal memproses file.";
                 }
             };
 
             reader.onerror = function() {
+                window.hideLoading();
                 window.showAlert('error', 'Gagal Baca File', "Terjadi kesalahan sistem saat membaca file komputer Anda.");
-                statusText.textContent = "Gagal membaca file.";
             };
 
             reader.readAsText(file);
@@ -740,7 +832,7 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            statusText.textContent = "Mencocokkan dan mengupdate data pendingan di Cloud...";
+            window.showLoading("Mencocokkan dan mengupdate data pendingan di Cloud...");
             
             const reader = new FileReader();
             reader.onload = async function(event) {
@@ -750,49 +842,39 @@
                     
                     if (lines.length < 2) throw new Error("File CSV kosong atau format tidak valid");
 
-                    // PERBAIKAN: Hilangkan BOM (Byte Order Mark) dan ubah ke huruf kecil
                     const headers = lines[0].split('|').map(h => h.trim().replace(/^[\u200B\u200C\uFEFF]+/, '').toLowerCase());
                     
-                    // Buat Map untuk pencarian cepat berdasarkan awb
                     const updateMap = new Map();
                     lines.slice(1).forEach(line => {
                         const values = line.split('|');
                         const obj = {};
                         headers.forEach((header, index) => {
-                            // Hapus tanda kutip dan spasi ekstra dari isi file
                             obj[header] = values[index] ? values[index].trim().replace(/['"]/g, '') : '';
                         });
                         
-                        // Deteksi awb_no atau awb
                         const awbVal = obj.awb_no || obj.awb;
                         if (awbVal) {
                             updateMap.set(awbVal, obj);
                         }
                     });
 
-                    // --- UPDATE FIREBASE FIRESTORE ---
                     try {
                         if (!auth.currentUser) throw new Error("Pengguna belum terautentikasi.");
 
                         let updatedCount = 0;
                         const recordsToUpdate = [];
 
-                        // Gunakan rawData yang sudah diload di memori untuk pencocokan
                         rawData.forEach(rec => {
-                            // Pastikan pembersihan AWB untuk pencocokan akurat 100%
                             const dbAwb = (rec.awb || '').trim().replace(/['"]/g, '');
                             
-                            // Cek: Jika data ini pending (80_tm kosong) DAN awb-nya ada di file update
-                            if ((!rec['80_tm'] || rec['80_tm'].trim() === '') && dbAwb && updateMap.has(dbAwb)) {
+                            if (dbAwb && updateMap.has(dbAwb)) {
                                 const updateData = updateMap.get(dbAwb);
                                 
-                                // Helper pembacaan nama kolom secara fleksibel
                                 const getVal = (keys) => {
                                     const key = Object.keys(updateData).find(k => keys.includes(k));
                                     return key ? updateData[key] : undefined;
                                 };
 
-                                // Eksekusi update nilai
                                 const val80 = getVal(['80_last', '80_tm']);
                                 if (val80 !== undefined && val80 !== '') rec['80_tm'] = val80;
                                 
@@ -800,100 +882,129 @@
                                 if (val205 !== undefined && val205 !== '') rec['_205_tm_last'] = val205;
                                 
                                 const valSla = getVal(['delivery_sla']);
-                                if (valSla !== undefined && valSla !== '') rec['delivery_sla'] = valSla;
+                                if (valSla !== undefined && valSla !== '') {
+                                    if (!valSla.match(/\d{4}-\d{2}-\d{2}/)) {
+                                        rec['delivery_sla'] = valSla;
+                                    }
+                                }
                                 
                                 const val55 = getVal(['55_tm', '_55_tm']);
                                 if (val55 !== undefined && val55 !== '') rec['_55_tm'] = val55;
                                 
-                                // Tambahkan kolom baru
-                                if (updateData['hub_operator_internal']) rec['hub_operator_internal'] = updateData['hub_operator_internal'];
-                                if (updateData['staging_operator_internal']) rec['staging_operator_internal'] = updateData['staging_operator_internal'];
-                                if (updateData['fop_code_internal']) rec['fop_code_internal'] = updateData['fop_code_internal'];
+                                if (updateData['hub_operator_internal'] !== undefined) rec['hub_operator_internal'] = updateData['hub_operator_internal'];
+                                if (updateData['staging_operator_internal'] !== undefined) rec['staging_operator_internal'] = updateData['staging_operator_internal'];
+                                if (updateData['fop_code_internal'] !== undefined) rec['fop_code_internal'] = updateData['fop_code_internal'];
                                 
                                 recordsToUpdate.push(rec);
                                 updatedCount++;
                             }
                         });
 
-                        // Proses update ke Firebase menggunakan Batch
                         const batchSize = 450;
                         for (let i = 0; i < recordsToUpdate.length; i += batchSize) {
                             const chunk = recordsToUpdate.slice(i, i + batchSize);
                             const batch = writeBatch(db);
                             
                             chunk.forEach(record => {
-                                // Nama dokumen adalah awb-nya
                                 const docRef = doc(db, COLLECTION_NAME, record.awb);
-                                // Set dengan merge true untuk mengupdate sebagian/seluruh data
                                 batch.set(docRef, record, { merge: true });
                             });
                             
                             await batch.commit();
                         }
 
-                        fileUpdatePending.value = ''; // Reset input file
+                        fileUpdatePending.value = ''; 
                         
+                        window.hideLoading();
+
                         if (updatedCount > 0) {
-                            window.showAlert('success', 'Update Berhasil', `Sebanyak ${updatedCount.toLocaleString()} data pendingan berhasil dicocokkan dan diupdate di Firebase.`);
-                            loadDataFromDB(); // Muat ulang visualisasi dan tabel
+                            window.showAlert('success', 'Update Berhasil', `Sebanyak ${updatedCount.toLocaleString()} data berhasil dicocokkan dan diupdate di Firebase.`);
+                            loadDataFromDB(); 
                         } else {
-                            window.showAlert('success', 'Tidak Ada Update', 'Tidak ada proses update. Data pendingan di sistem tidak memiliki awb yang cocok dengan file Anda.');
-                            statusText.textContent = "Sistem Manajemen Data Siap Digunakan";
+                            window.showAlert('success', 'Tidak Ada Update', 'Tidak ada proses update. Sistem tidak memiliki AWB yang cocok dengan file Anda.');
                         }
                     } catch (error) {
                         console.error("Firebase Update Error:", error);
+                        window.hideLoading();
                         window.showAlert('error', 'Database Error', 'Gagal memproses update ke dalam Firebase. Pastikan koneksi jaringan stabil.');
                     }
 
                 } catch (err) {
-                    window.showAlert('error', 'Format Salah', "Gagal membaca file update. Pastikan format delimiter '|' dan kolom 'awb_no' tersedia.");
-                    statusText.textContent = "Sistem Manajemen Data Siap Digunakan";
+                    window.hideLoading();
+                    window.showAlert('error', 'Format Salah', "Gagal membaca file update. Pastikan format delimiter '|' dan kolom tersedia.");
                 }
             };
             
             reader.onerror = function() {
+                window.hideLoading();
                 window.showAlert('error', 'Gagal Baca File', "Terjadi kesalahan sistem saat membaca file komputer Anda.");
             };
 
             reader.readAsText(file);
         });
 
-        // --- ALUR HAPUS DATA ---
+        // --- ALUR HAPUS DATA SEBAGIAN ---
         btnHapusData.addEventListener('click', function() {
-            window.openModal('modalConfirmDelete');
+            const selectElem = document.getElementById('selectDeleteDate');
+            selectElem.innerHTML = '';
+            
+            const uniqueDates = [...new Set(rawData.map(r => r.input_date).filter(Boolean))].sort((a,b) => b.localeCompare(a));
+            
+            if (uniqueDates.length === 0) {
+                selectElem.innerHTML = '<option value="">Tidak ada data tersedia</option>';
+                document.getElementById('btnConfirmDeleteDate').disabled = true;
+                document.getElementById('btnConfirmDeleteDate').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                uniqueDates.forEach(date => {
+                    const count = rawData.filter(r => r.input_date === date).length;
+                    selectElem.innerHTML += `<option value="${date}">${date} (${count.toLocaleString()} AWB)</option>`;
+                });
+                document.getElementById('btnConfirmDeleteDate').disabled = false;
+                document.getElementById('btnConfirmDeleteDate').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            window.openModal('modalDeleteByDate');
         });
 
-        document.getElementById('btnConfirmDelete').addEventListener('click', async () => {
-            window.closeModal('modalConfirmDelete');
-            statusText.textContent = "Menghapus data dari Cloud...";
+        document.getElementById('btnConfirmDeleteDate').addEventListener('click', async () => {
+            const selectedDate = document.getElementById('selectDeleteDate').value;
+            if (!selectedDate) return;
+
+            window.closeModal('modalDeleteByDate');
+            window.showLoading(`Menghapus data untuk tanggal unggah ${selectedDate}...`);
             
             try {
                 if (!auth.currentUser) throw new Error("Pengguna belum terautentikasi.");
 
-                const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
-                const docsToDelete = [];
-                querySnapshot.forEach((docSnap) => {
-                    docsToDelete.push(docSnap.ref);
-                });
+                const awbsToDelete = rawData.filter(r => r.input_date === selectedDate).map(r => r.awb).filter(Boolean);
                 
-                // Gunakan Batch Write untuk menghapus dokumen dalam jumlah banyak
+                if (awbsToDelete.length === 0) {
+                    window.hideLoading();
+                    window.showAlert('success', 'Info', 'Tidak ada data yang cocok untuk dihapus.');
+                    return;
+                }
+
                 const batchSize = 450;
-                for (let i = 0; i < docsToDelete.length; i += batchSize) {
-                    const chunk = docsToDelete.slice(i, i + batchSize);
+                for (let i = 0; i < awbsToDelete.length; i += batchSize) {
+                    const chunk = awbsToDelete.slice(i, i + batchSize);
                     const batch = writeBatch(db);
-                    chunk.forEach(ref => {
-                        batch.delete(ref);
+                    chunk.forEach(awb => {
+                        const docRef = doc(db, COLLECTION_NAME, awb);
+                        batch.delete(docRef);
                     });
                     await batch.commit();
                 }
                 
+                window.hideLoading();
+                window.showAlert('success', 'Data Sebagian Dihapus', `Sebanyak ${awbsToDelete.length.toLocaleString()} AWB untuk tanggal upload ${selectedDate} berhasil dihapus.`);
+                
                 rawData = [];
                 filteredData = [];
-                window.showAlert('success', 'Database Dibersihkan', 'Seluruh data operasional telah berhasil dihapus dari Firebase.');
-                loadDataFromDB(); // otomatis mengembalikan ke empty state
+                loadDataFromDB(); 
             } catch (error) {
                 console.error("Firebase Delete Error:", error);
-                window.showAlert('error', 'Gagal Hapus', 'Gagal menghapus data dari Firebase.');
+                window.hideLoading();
+                window.showAlert('error', 'Gagal Hapus', 'Gagal menghapus data dari Firebase. Pastikan koneksi internet Anda stabil.');
             }
         });
 
@@ -922,7 +1033,6 @@
                 delivery_sla: getUnique('delivery_sla')
             };
 
-            // Helper function untuk isi dropdown
             const fillSelect = (selectElem, optArray, defaultText) => {
                 selectElem.innerHTML = `<option value="All">${defaultText}</option>`;
                 optArray.forEach(opt => {
@@ -944,7 +1054,6 @@
             });
         }
 
-        // Trigger filter ketika ada perubahan input
         filterInputs.forEach(input => {
             input.addEventListener('change', applyFilters);
         });
@@ -967,14 +1076,12 @@
             filteredData = rawData.filter(row => {
                 let isValid = true;
 
-                // Filter Tanggal (berdasarkan kolom input_date yang disematkan saat upload)
                 if (row.input_date) {
                     const rowDt = new Date(row.input_date);
                     if (startDt && rowDt < startDt) isValid = false;
                     if (endDt && rowDt > endDt) isValid = false;
                 }
 
-                // Filter Dropdown
                 for (const key in filters) {
                     if (filters[key] !== 'All' && row[key] !== filters[key]) {
                         isValid = false;
@@ -990,7 +1097,6 @@
 
         // Update Summary & Charts
         function updateUI() {
-            // Update Summary Stats
             document.getElementById('statTotalRaw').textContent = rawData.length.toLocaleString();
             document.getElementById('statTotalFiltered').textContent = filteredData.length.toLocaleString();
             
@@ -1000,40 +1106,27 @@
             document.getElementById('statSlaOk').textContent = slaOk.toLocaleString();
             document.getElementById('statSlaMissed').textContent = slaMissed.toLocaleString();
 
-            // Render Trend 80_tm Chart
             renderTrend80Chart();
 
-            // Prepare Chart Data
-            const destData = getChartData('destination_staging').slice(0, 15); // Ambil Top 15 saja agar tidak terlalu panjang
+            const destData = getChartData('destination_staging').slice(0, 15); 
             const serviceData = getChartData('service_code');
             const codData = getChartData('use_cod');
             const channelData = getChartData('channel');
             const slaData = getChartData('delivery_sla');
 
-            // Render Charts
             renderBarChart('chartDestination', destData, 'bg-indigo-500');
             renderBarChart('chartService', serviceData, 'bg-blue-500');
             renderBarChart('chartSla', slaData, 'bg-emerald-500');
             renderBarChart('chartChannel', channelData, 'bg-amber-500');
             renderBarChart('chartCod', codData, 'bg-purple-500');
 
-            // Render Table Status
             renderStatusTable();
-            
-            // Render Table LT 47-80
             renderLtTable();
-
-            // Render Table Expect Delivery
             renderExpTable();
-
-            // Render Table Pendingan
             renderPendingTable();
-            
-            // Render Table Return
             renderReturnTable();
         }
 
-        // Agregasi Data untuk Chart
         function getChartData(field) {
             const counts = {};
             filteredData.forEach(row => {
@@ -1043,10 +1136,9 @@
             
             return Object.keys(counts)
                 .map(key => ({ name: key, count: counts[key] }))
-                .sort((a, b) => b.count - a.count); // Descending
+                .sort((a, b) => b.count - a.count); 
         }
 
-        // Fungsi menggambar Chart Bar HTML
         function renderBarChart(containerId, data, colorClass) {
             const container = document.getElementById(containerId);
             
@@ -1077,15 +1169,13 @@
             container.innerHTML = html;
         }
 
-        // Fungsi menggambar Chart Bar Vertikal untuk 80_tm
         function renderTrend80Chart() {
             const container = document.getElementById('chartTrend80');
             const dateCounts = {};
 
             filteredData.forEach(row => {
-                // Cek jika 80_tm ada isinya
                 if (row['80_tm'] && row['80_tm'].trim() !== '') {
-                    const dateStr = row['80_tm'].trim().split(' ')[0]; // Ekstrak hanya YYYY-MM-DD
+                    const dateStr = row['80_tm'].trim().split(' ')[0]; 
                     if (!dateCounts[dateStr]) {
                         dateCounts[dateStr] = 0;
                     }
@@ -1093,7 +1183,6 @@
                 }
             });
 
-            // Urutkan tanggal secara kronologis
             const sortedDates = Object.keys(dateCounts).sort((a, b) => new Date(a) - new Date(b));
 
             if (sortedDates.length === 0) {
@@ -1101,7 +1190,6 @@
                 return;
             }
 
-            // Cari nilai max untuk menghitung persentase tinggi bar
             const maxCount = Math.max(...Object.values(dateCounts), 1);
 
             let html = '';
@@ -1109,7 +1197,6 @@
                 const count = dateCounts[date];
                 const heightPct = (count / maxCount) * 100;
                 
-                // Format label tanggal (Misal: "24 Feb")
                 const dObj = new Date(date);
                 const day = dObj.getDate().toString().padStart(2, '0');
                 const month = dObj.toLocaleString('id-ID', { month: 'short' });
@@ -1117,10 +1204,8 @@
 
                 html += `
                     <div class="flex flex-col items-center flex-1 min-w-[50px] max-w-[80px] h-full justify-end group">
-                        <!-- Nilai/Value ditampilkan di atas bar (tanpa sumbu Y) -->
                         <span class="text-xs font-bold text-gray-700 mb-1">${count.toLocaleString()}</span>
                         <div class="w-full bg-indigo-500 rounded-t-md transition-all duration-500 hover:bg-indigo-600" style="height: ${Math.max(heightPct, 2)}%;"></div>
-                        <!-- Label Sumbu X (Tanggal saja) -->
                         <span class="text-[10px] text-gray-500 mt-2 whitespace-nowrap">${dateLabel}</span>
                     </div>
                 `;
@@ -1129,7 +1214,6 @@
             container.innerHTML = html;
         }
 
-        // Fungsi menggambar Tabel Pencapaian Status
         function renderStatusTable() {
             const stagingGroups = {};
             let tAwb = 0, t47 = 0, t204 = 0, t205 = 0, t80 = 0;
@@ -1143,15 +1227,12 @@
                 stagingGroups[staging].total++;
                 tAwb++;
 
-                // Cek isi waktu (time) untuk setiap kolom status. Jika tidak kosong, hitung ++.
                 if (row._47_tm && row._47_tm.trim() !== '') { stagingGroups[staging].c47++; t47++; }
                 if (row._204_tm && row._204_tm.trim() !== '') { stagingGroups[staging].c204++; t204++; }
-                // Untuk 205, karena di header file ada _205_tm_first dan _205_tm_last, kita cek salah satunya
                 if ((row._205_tm_first && row._205_tm_first.trim() !== '') || (row._205_tm_last && row._205_tm_last.trim() !== '')) { stagingGroups[staging].c205++; t205++; }
                 if (row['80_tm'] && row['80_tm'].trim() !== '') { stagingGroups[staging].c80++; t80++; }
             });
 
-            // Ubah objek ke array dan urutkan dari Total AWB terbanyak
             const tableData = Object.keys(stagingGroups).map(key => ({
                 staging: key,
                 ...stagingGroups[key]
@@ -1166,10 +1247,8 @@
                 return;
             }
 
-            // Helper menghitung persen
             const formatPct = (count, total) => total === 0 ? '0.00%' : ((count / total) * 100).toFixed(2) + '%';
 
-            // Generate Baris Tabel
             let rowsHtml = '';
             tableData.forEach(item => {
                 rowsHtml += `
@@ -1185,7 +1264,6 @@
             });
             tbody.innerHTML = rowsHtml;
 
-            // Generate Footer/Keseluruhan
             tfoot.innerHTML = `
                 <tr>
                     <td class="p-3 text-blue-700">TOTAL KESELURUHAN</td>
@@ -1198,7 +1276,6 @@
             `;
         }
 
-        // Fungsi menggambar Tabel Lead Time 47 - 80
         function renderLtTable() {
             const stagingGroups = {};
             let tAwb = 0;
@@ -1207,14 +1284,13 @@
             let globalMin = Infinity;
 
             filteredData.forEach(row => {
-                // Pastikan 80_tm dan _47_tm ada dan tidak kosong
                 if (row['80_tm'] && row['80_tm'].trim() !== '' && row._47_tm && row._47_tm.trim() !== '') {
                     const dt80 = new Date(row['80_tm']);
                     const dt47 = new Date(row._47_tm);
                     
                     if (!isNaN(dt80) && !isNaN(dt47)) {
                         const diffMs = dt80 - dt47;
-                        const diffHours = diffMs / (1000 * 60 * 60); // Langsung mengonversi selisih milidetik ke Total Jam
+                        const diffHours = diffMs / (1000 * 60 * 60); 
 
                         const staging = row.destination_staging || 'Unknown';
                         if (!stagingGroups[staging]) {
@@ -1234,7 +1310,6 @@
                 }
             });
 
-            // Ubah objek ke array dan urutkan dari Total AWB terbanyak
             const tableData = Object.keys(stagingGroups).map(key => ({
                 staging: key,
                 ...stagingGroups[key]
@@ -1249,10 +1324,8 @@
                 return;
             }
 
-            // Helper format jam
             const formatHr = (val) => val === Infinity || val === -Infinity ? '-' : val.toFixed(2);
 
-            // Generate Baris Tabel
             let rowsHtml = '';
             tableData.forEach(item => {
                 const avgHours = item.sumHours / item.count;
@@ -1274,7 +1347,6 @@
             });
             tbody.innerHTML = rowsHtml;
 
-            // Generate Footer/Keseluruhan
             const globalAvg = sumTotalHours / tAwb;
             tfoot.innerHTML = `
                 <tr>
@@ -1293,7 +1365,6 @@
             `;
         }
 
-        // Fungsi menggambar Tabel Expect Delivery (Pivot Status EDD)
         function renderExpTable() {
             const stagingGroups = {};
             let totalOverall = 0;
@@ -1303,18 +1374,16 @@
                 const staging = row.destination_staging || 'Unknown';
                 let status = 'Unknown';
                 
-                // Pastikan ada tanggal expect delivery dan tanggal input
                 if (row.expect_delivery_tm && row.expect_delivery_tm.trim() !== '' && row.input_date) {
-                    const expDateStr = row.expect_delivery_tm.trim().split(' ')[0]; // Ambil YYYY-MM-DD
-                    const inDateStr = row.input_date; // Format YYYY-MM-DD
+                    const expDateStr = row.expect_delivery_tm.trim().split(' ')[0]; 
+                    const inDateStr = row.input_date; 
                     
-                    // Parse menjadi objek Date (Set ke jam 00:00:00 agar perbandingan hari akurat)
                     const dExp = new Date(expDateStr + 'T00:00:00');
                     const dIn = new Date(inDateStr + 'T00:00:00');
                     
                     if (!isNaN(dExp) && !isNaN(dIn)) {
                         const diffTime = dExp - dIn;
-                        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); // Selisih dalam Hari
+                        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
                         
                         if (diffDays < 0) status = 'Before EDD';
                         else if (diffDays === 0) status = 'LastDay';
@@ -1337,7 +1406,6 @@
                 totalOverall++;
             });
 
-            // Ubah objek ke array dan urutkan dari Total AWB terbanyak
             const tableData = Object.keys(stagingGroups).map(key => ({
                 staging: key,
                 ...stagingGroups[key]
@@ -1354,14 +1422,11 @@
                 return;
             }
 
-            // Kolom utama yang ditampilkan
             const columns = ['Before EDD', 'LastDay', 'Sameday', 'After EDD'];
-            // Tampilkan kolom 'Unknown' hanya jika ada data yang tanggalnya kosong/tidak valid
             const showUnknown = totals['Unknown'] > 0;
             const displayCols = [...columns];
             if (showUnknown) displayCols.push('Unknown');
 
-            // Generate Header Tabel
             let headHtml = `<tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
                 <th class="p-3 font-semibold sticky left-0 bg-gray-50">Destination Staging</th>`;
             displayCols.forEach(col => {
@@ -1370,7 +1435,6 @@
             headHtml += `<th class="p-3 font-semibold text-right border-l border-gray-200 bg-blue-50/50">Total</th></tr>`;
             thead.innerHTML = headHtml;
 
-            // Generate Baris Tabel
             let rowsHtml = '';
             tableData.forEach(item => {
                 rowsHtml += `
@@ -1386,7 +1450,6 @@
             });
             tbody.innerHTML = rowsHtml;
 
-            // Generate Footer/Keseluruhan
             let footHtml = `
                 <tr>
                     <td class="p-3 text-blue-700 sticky left-0 bg-gray-50">TOTAL KESELURUHAN</td>`;
@@ -1397,23 +1460,18 @@
             tfoot.innerHTML = footHtml;
         }
 
-        // Fungsi mengunduh CSV AWB Pending
         window.downloadPendingCsv = function(button, targetStaging) {
-            let csvContent = "Destination Staging,AWB\n"; // Header CSV
+            let csvContent = "Destination Staging,AWB\n"; 
             let hasData = false;
             
-            // Loop ulang ke data yang terfilter untuk mengumpulkan AWB pending
             filteredData.forEach(row => {
-                // Pending berarti 80_tm kosong DAN _55_tm kosong
                 if ((!row['80_tm'] || row['80_tm'].trim() === '') && (!row['_55_tm'] || row['_55_tm'].trim() === '')) {
                     
                     const staging = row.destination_staging || 'Unknown';
                     const awb = row.awb;
                     
                     if (awb) {
-                        // Kumpulkan AWB berdasarkan tombol yang diklik (spesifik staging atau semuanya)
                         if (targetStaging === 'ALL' || staging === targetStaging) {
-                            // Menggunakan quote untuk mencegah error jika nama staging ada tanda koma
                             csvContent += `"${staging}","${awb}"\n`;
                             hasData = true;
                         }
@@ -1423,7 +1481,6 @@
 
             if (!hasData) return;
 
-            // Proses pembuatan file CSV dan Trigger Download
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
@@ -1439,15 +1496,12 @@
             link.click();
             document.body.removeChild(link);
             
-            // Animasi interaktif pada tombol setelah berhasil download
             const oldHTML = button.innerHTML;
             button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Terunduh`;
             
-            // Ganti warna menjadi hijau
             const isSemua = targetStaging === 'ALL';
             button.className = "px-3 py-1 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-md transition-colors whitespace-nowrap";
             
-            // Kembalikan ke warna asli setelah 2 detik
             setTimeout(() => {
                 button.innerHTML = oldHTML;
                 if (isSemua) {
@@ -1458,13 +1512,11 @@
             }, 2000);
         };
 
-        // Fungsi mengunduh CSV AWB Return
         window.downloadReturnCsv = function(button, targetStaging) {
-            let csvContent = "Destination Staging,AWB\n"; // Header CSV
+            let csvContent = "Destination Staging,AWB\n"; 
             let hasData = false;
             
             filteredData.forEach(row => {
-                // Return berarti _55_tm ada isinya
                 if (row['_55_tm'] && row['_55_tm'].trim() !== '') {
                     const staging = row.destination_staging || 'Unknown';
                     const awb = row.awb;
@@ -1506,7 +1558,6 @@
             }, 2000);
         };
 
-        // Fungsi menggambar Tabel Pendingan
         function renderPendingTable() {
             const stagingGroups = {};
             const fopSet = new Set();
@@ -1514,10 +1565,8 @@
             const totalsPerFop = {};
 
             filteredData.forEach(row => {
-                // Cek apakah 80_tm kosong DAN _55_tm kosong (Pending sejati)
                 if ((!row['80_tm'] || row['80_tm'].trim() === '') && (!row['_55_tm'] || row['_55_tm'].trim() === '')) {
                     const staging = row.destination_staging || 'Unknown';
-                    // Ambil fop code, jika kosong/belum diupdate beri label khusus
                     let fopCode = (row.fop_code_internal && row.fop_code_internal.trim() !== '') ? row.fop_code_internal.trim() : 'Belum Diupdate';
                     
                     fopSet.add(fopCode);
@@ -1561,7 +1610,6 @@
                 return;
             }
 
-            // Generate Header Tabel secara dinamis
             let headHtml = `<tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
                 <th class="p-3 font-semibold sticky left-0 bg-gray-50">Destination Staging</th>`;
             sortedFops.forEach(fop => {
@@ -1570,7 +1618,6 @@
             headHtml += `<th class="p-3 font-semibold text-right border-l border-gray-200 bg-red-50">Total</th></tr>`;
             thead.innerHTML = headHtml;
 
-            // Generate Baris Tabel
             let rowsHtml = '';
             tableData.forEach(item => {
                 rowsHtml += `
@@ -1586,7 +1633,6 @@
             });
             tbody.innerHTML = rowsHtml;
 
-            // Generate Footer/Keseluruhan
             let footHtml = `
                 <tr>
                     <td class="p-3 flex items-center justify-between sticky left-0 bg-red-50">
@@ -1605,7 +1651,6 @@
             tfoot.innerHTML = footHtml;
         }
 
-        // Fungsi menggambar Tabel Paket Return
         function renderReturnTable() {
             const stagingGroups = {};
             const fopSet = new Set();
@@ -1613,7 +1658,6 @@
             const totalsPerFop = {};
 
             filteredData.forEach(row => {
-                // Cek apakah _55_tm ada isinya (Status Return)
                 if (row['_55_tm'] && row['_55_tm'].trim() !== '') {
                     const staging = row.destination_staging || 'Unknown';
                     let fopCode = (row.fop_code_internal && row.fop_code_internal.trim() !== '') ? row.fop_code_internal.trim() : 'Belum Diupdate';
