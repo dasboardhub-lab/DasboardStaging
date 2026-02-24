@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Operasional</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js (Untuk Grafik Kombinasi Bar & Line) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Plugin DataLabels untuk menampilkan angka langsung di dalam grafik -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
     <style>
         /* Custom scrollbar untuk chart */
         .chart-container::-webkit-scrollbar {
@@ -153,9 +159,12 @@
             
             <!-- FILTERS SECTION (Dipindah ke atas) -->
             <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mb-6">
-                <div class="flex items-center gap-2 mb-4 border-b border-gray-100 pb-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                    <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Filter Data</h2>
+                <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                        <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Filter Data</h2>
+                    </div>
+                    <button onclick="resetFilters()" class="text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1 rounded-md transition-colors">Reset Semua Filter</button>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -163,48 +172,58 @@
                     <div class="col-span-1 md:col-span-2 flex gap-4">
                         <div class="flex-1">
                             <label class="block text-xs font-semibold text-gray-600 mb-1">Dari Tanggal (Input)</label>
-                            <input type="date" id="filterStartDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none filter-input" />
+                            <input type="date" id="filterStartDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none filter-date" />
                         </div>
                         <div class="flex-1">
                             <label class="block text-xs font-semibold text-gray-600 mb-1">Sampai Tanggal (Input)</label>
-                            <input type="date" id="filterEndDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none filter-input" />
+                            <input type="date" id="filterEndDate" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none filter-date" />
                         </div>
                     </div>
 
-                    <!-- Dropdowns -->
-                    <div>
+                    <!-- Dropdowns (Custom Multi-Select) -->
+                    <div class="custom-multiselect relative">
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Destination Staging</label>
-                        <select id="filterDestination" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white filter-input">
-                            <option value="All">Semua Staging</option>
-                        </select>
+                        <div class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white cursor-pointer flex justify-between items-center select-none" onclick="toggleDropdown('filterDestination')">
+                            <span class="truncate pr-2 text-gray-700 font-medium" id="text-filterDestination">Semua Staging</span>
+                            <svg id="arrow-filterDestination" class="w-4 h-4 text-gray-500 transition-transform dropdown-arrow flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="menu-filterDestination" class="dropdown-menu absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl hidden flex-col"></div>
                     </div>
 
-                    <div>
+                    <div class="custom-multiselect relative">
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Service Code</label>
-                        <select id="filterService" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white filter-input">
-                            <option value="All">Semua Service</option>
-                        </select>
+                        <div class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white cursor-pointer flex justify-between items-center select-none" onclick="toggleDropdown('filterService')">
+                            <span class="truncate pr-2 text-gray-700 font-medium" id="text-filterService">Semua Service</span>
+                            <svg id="arrow-filterService" class="w-4 h-4 text-gray-500 transition-transform dropdown-arrow flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="menu-filterService" class="dropdown-menu absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl hidden flex-col"></div>
                     </div>
 
-                    <div>
+                    <div class="custom-multiselect relative">
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Use COD</label>
-                        <select id="filterCod" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white filter-input">
-                            <option value="All">Semua Status</option>
-                        </select>
+                        <div class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white cursor-pointer flex justify-between items-center select-none" onclick="toggleDropdown('filterCod')">
+                            <span class="truncate pr-2 text-gray-700 font-medium" id="text-filterCod">Semua Status</span>
+                            <svg id="arrow-filterCod" class="w-4 h-4 text-gray-500 transition-transform dropdown-arrow flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="menu-filterCod" class="dropdown-menu absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl hidden flex-col"></div>
                     </div>
 
-                    <div>
+                    <div class="custom-multiselect relative">
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Channel</label>
-                        <select id="filterChannel" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white filter-input">
-                            <option value="All">Semua Channel</option>
-                        </select>
+                        <div class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white cursor-pointer flex justify-between items-center select-none" onclick="toggleDropdown('filterChannel')">
+                            <span class="truncate pr-2 text-gray-700 font-medium" id="text-filterChannel">Semua Channel</span>
+                            <svg id="arrow-filterChannel" class="w-4 h-4 text-gray-500 transition-transform dropdown-arrow flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="menu-filterChannel" class="dropdown-menu absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl hidden flex-col"></div>
                     </div>
 
-                    <div>
+                    <div class="custom-multiselect relative">
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Delivery SLA</label>
-                        <select id="filterSla" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white filter-input">
-                            <option value="All">Semua SLA</option>
-                        </select>
+                        <div class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white cursor-pointer flex justify-between items-center select-none" onclick="toggleDropdown('filterSla')">
+                            <span class="truncate pr-2 text-gray-700 font-medium" id="text-filterSla">Semua SLA</span>
+                            <svg id="arrow-filterSla" class="w-4 h-4 text-gray-500 transition-transform dropdown-arrow flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div id="menu-filterSla" class="dropdown-menu absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl hidden flex-col"></div>
                     </div>
                 </div>
             </div>
@@ -231,128 +250,139 @@
 
             <!-- TREND PENGIRIMAN 80_TM CHART -->
             <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mb-6">
-                <div class="flex items-center gap-2 mb-4">
+                <div class="flex items-center gap-2 mb-4 border-b border-gray-100 pb-3">
                     <div class="p-2 rounded-lg bg-indigo-50">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
                     </div>
-                    <h3 class="text-sm font-semibold text-gray-800">Trend Penyelesaian Kiriman (Berdasarkan Tanggal 80_tm)</h3>
+                    <h3 class="text-sm font-semibold text-gray-800">Tren Paket</h3>
                 </div>
-                <!-- Chart Vertical tanpa Y-Axis -->
-                <div id="chartTrend80" class="w-full flex items-end justify-start gap-3 overflow-x-auto pt-8 pb-2 border-b border-gray-100 chart-container" style="height: 250px;">
-                    <!-- Vertical bars injected here -->
+                
+                <!-- Kombinasi Chart.js -->
+                <div id="chartTrend80Wrapper" class="w-full relative chart-container" style="height: 320px;">
+                    <canvas id="chartTrend80Canvas"></canvas>
                 </div>
             </div>
 
             <!-- CHARTS GRID -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Destination Staging Chart -->
-                <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- KOLOM 1: Destination Staging -->
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col h-full">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="p-2 rounded-lg bg-gray-50">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                         </div>
-                        <h3 class="text-sm font-semibold text-gray-800">Top 15 Destination Staging</h3>
+                        <h3 class="text-sm font-semibold text-gray-800">Destination Staging</h3>
                     </div>
-                    <div id="chartDestination" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 250px;"></div>
+                    <div id="chartDestination" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 700px;"></div>
                 </div>
 
-                <!-- Service Code Chart -->
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                <!-- KOLOM 2: Delivery SLA & Use COD (Disusun atas bawah) -->
+                <div class="flex flex-col gap-6">
+                    <!-- Delivery SLA Chart -->
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col flex-1">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="p-2 rounded-lg bg-gray-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-gray-800">Delivery SLA Performance</h3>
+                        </div>
+                        <div id="chartSla" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 330px;"></div>
+                    </div>
+
+                    <!-- Use COD Chart -->
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col flex-1">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="p-2 rounded-lg bg-gray-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-gray-800">Use COD</h3>
+                        </div>
+                        <div id="chartCod" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 330px;"></div>
+                    </div>
+                </div>
+
+                <!-- KOLOM 3: Service Code & Channel (Disusun atas bawah) -->
+                <div class="flex flex-col gap-6">
+                    <!-- Service Code Chart -->
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col flex-1">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="p-2 rounded-lg bg-gray-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-gray-800">Service Code</h3>
+                        </div>
+                        <div id="chartService" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 330px;"></div>
+                    </div>
+
+                    <!-- Channel Chart -->
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col flex-1">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="p-2 rounded-lg bg-gray-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-gray-800">Channel</h3>
+                        </div>
+                        <div id="chartChannel" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 330px;"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- DUA TABEL BERDAMPINGAN: Kelengkapan Opcode & Lead Time -->
+            <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 mt-6">
+                <!-- TABEL KELENGKAPAN OPCODE (70%) -->
+                <div class="lg:col-span-7 bg-white p-5 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="p-2 rounded-lg bg-gray-50">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
                         </div>
-                        <h3 class="text-sm font-semibold text-gray-800">AWB by Service Code</h3>
+                        <h3 class="text-sm font-semibold text-gray-800">Tabel Kelengkapan Opcode</h3>
                     </div>
-                    <div id="chartService" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 250px;"></div>
+                    <table class="w-full text-left border-collapse min-w-max">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
+                                <th class="p-3 font-semibold">Destination Staging</th>
+                                <th class="p-3 font-semibold text-right border-l border-gray-200">Total AWB</th>
+                                <th class="p-3 font-semibold text-right border-l border-gray-200">Opcode 47</th>
+                                <th class="p-3 font-semibold text-right border-l border-gray-200">Opcode 204</th>
+                                <th class="p-3 font-semibold text-right border-l border-gray-200">Opcode 205</th>
+                                <th class="p-3 font-semibold text-right border-l border-gray-200">Opcode 80</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableStatusBody" class="text-sm divide-y divide-gray-100">
+                            <!-- Content goes here -->
+                        </tbody>
+                        <tfoot id="tableStatusFoot" class="bg-gray-50 font-bold text-gray-800 text-sm border-t-2 border-gray-200">
+                            <!-- Overall goes here -->
+                        </tfoot>
+                    </table>
                 </div>
 
-                <!-- Delivery SLA Chart -->
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                <!-- TABEL LEAD TIME (LT) 47 - 80 (30%) -->
+                <div class="lg:col-span-3 bg-white p-5 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="p-2 rounded-lg bg-gray-50">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         </div>
-                        <h3 class="text-sm font-semibold text-gray-800">Delivery SLA Performance</h3>
+                        <h3 class="text-sm font-semibold text-gray-800">Tabel Lead Time (LT) 47 - 80</h3>
                     </div>
-                    <div id="chartSla" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 250px;"></div>
+                    <table class="w-full text-left border-collapse min-w-max">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
+                                <th class="p-3 font-semibold">Destination Staging</th>
+                                <th class="p-3 font-semibold text-right border-l border-gray-200 w-1/4">Total AWB (Selesai)</th>
+                                <th class="p-3 font-semibold text-right border-l border-gray-200">Lead Time (Jam)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableLtBody" class="text-sm divide-y divide-gray-100">
+                            <!-- Content goes here -->
+                        </tbody>
+                        <tfoot id="tableLtFoot" class="bg-gray-50 font-bold text-gray-800 text-sm border-t-2 border-gray-200">
+                            <!-- Overall goes here -->
+                        </tfoot>
+                    </table>
                 </div>
-
-                <!-- Channel Chart -->
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="p-2 rounded-lg bg-gray-50">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-                        </div>
-                        <h3 class="text-sm font-semibold text-gray-800">AWB by Channel</h3>
-                    </div>
-                    <div id="chartChannel" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 250px;"></div>
-                </div>
-
-                <!-- Use COD Chart -->
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="p-2 rounded-lg bg-gray-50">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                        </div>
-                        <h3 class="text-sm font-semibold text-gray-800">Use COD</h3>
-                    </div>
-                    <div id="chartCod" class="flex-1 overflow-y-auto pr-2 chart-container" style="max-height: 250px;"></div>
-                </div>
-
-            </div>
-
-            <!-- TABEL PERFORMA STATUS -->
-            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mt-6 overflow-x-auto">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="p-2 rounded-lg bg-gray-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
-                    </div>
-                    <h3 class="text-sm font-semibold text-gray-800">Tabel Pencapaian Status (47, 204, 205, 80)</h3>
-                </div>
-                <table class="w-full text-left border-collapse min-w-max">
-                    <thead>
-                        <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
-                            <th class="p-3 font-semibold">Destination Staging</th>
-                            <th class="p-3 font-semibold text-right border-l border-gray-200">Total AWB</th>
-                            <th class="p-3 font-semibold text-right border-l border-gray-200">Status 47</th>
-                            <th class="p-3 font-semibold text-right border-l border-gray-200">Status 204</th>
-                            <th class="p-3 font-semibold text-right border-l border-gray-200">Status 205</th>
-                            <th class="p-3 font-semibold text-right border-l border-gray-200">Status 80</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableStatusBody" class="text-sm divide-y divide-gray-100">
-                        <!-- Content goes here -->
-                    </tbody>
-                    <tfoot id="tableStatusFoot" class="bg-gray-50 font-bold text-gray-800 text-sm border-t-2 border-gray-200">
-                        <!-- Overall goes here -->
-                    </tfoot>
-                </table>
-            </div>
-
-            <!-- TABEL LEAD TIME (LT) 47 - 80 -->
-            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mt-6 overflow-x-auto">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="p-2 rounded-lg bg-gray-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    </div>
-                    <h3 class="text-sm font-semibold text-gray-800">Tabel Lead Time (LT) 47 - 80</h3>
-                </div>
-                <table class="w-full text-left border-collapse min-w-max">
-                    <thead>
-                        <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
-                            <th class="p-3 font-semibold">Destination Staging</th>
-                            <th class="p-3 font-semibold text-right border-l border-gray-200 w-1/4">Total AWB (Selesai)</th>
-                            <th class="p-3 font-semibold text-right border-l border-gray-200">Lead Time (Jam)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableLtBody" class="text-sm divide-y divide-gray-100">
-                        <!-- Content goes here -->
-                    </tbody>
-                    <tfoot id="tableLtFoot" class="bg-gray-50 font-bold text-gray-800 text-sm border-t-2 border-gray-200">
-                        <!-- Overall goes here -->
-                    </tfoot>
-                </table>
             </div>
 
             <!-- TABEL EXPECT DELIVERY -->
@@ -524,6 +554,15 @@
         let pendingFile = null; 
         let currentAuthAction = null; 
 
+        let activeFilters = {
+            destination_staging: [],
+            service_code: [],
+            use_cod: [],
+            channel: [],
+            delivery_sla: []
+        };
+        let trendChartInstance = null; // Menyimpan instansi grafik Chart.js
+
         // UI Elements
         const btnTriggerUpload = document.getElementById('btnTriggerUpload');
         const btnUpdatePending = document.getElementById('btnUpdatePending');
@@ -533,16 +572,11 @@
         const emptyState = document.getElementById('emptyState');
         const dashboardContent = document.getElementById('dashboardContent');
 
-        // Filter Inputs
-        const filterInputs = document.querySelectorAll('.filter-input');
+        // Filter Inputs (hanya tanggal yang pakai class .filter-date sekarang)
+        const dateInputs = document.querySelectorAll('.filter-date');
         const inputs = {
             startDate: document.getElementById('filterStartDate'),
-            endDate: document.getElementById('filterEndDate'),
-            destination_staging: document.getElementById('filterDestination'),
-            service_code: document.getElementById('filterService'),
-            use_cod: document.getElementById('filterCod'),
-            channel: document.getElementById('filterChannel'),
-            delivery_sla: document.getElementById('filterSla')
+            endDate: document.getElementById('filterEndDate')
         };
 
         // --- SISTEM MANAJEMEN MODAL ---
@@ -1008,17 +1042,66 @@
             }
         });
 
+        // --- LOGIKA RESET & SETUP FILTER ---
+        window.toggleDropdown = function(elementId) {
+            const menu = document.getElementById(`menu-${elementId}`);
+            const arrow = document.getElementById(`arrow-${elementId}`);
+            const isHidden = menu.classList.contains('hidden');
+            
+            // Tutup semua menu dropdown lain
+            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.dropdown-arrow').forEach(a => a.classList.remove('rotate-180'));
+
+            // Buka menu yang dipilih jika sebelumnya tertutup
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                arrow.classList.add('rotate-180');
+            }
+        };
+
+        // Tutup menu dropdown jika mengklik area di luar filter
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-multiselect')) {
+                document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+                document.querySelectorAll('.dropdown-arrow').forEach(a => a.classList.remove('rotate-180'));
+            }
+        });
+
+        window.resetFilters = function() {
+            inputs.startDate.value = '';
+            inputs.endDate.value = '';
+            
+            // Uncheck semua checkbox
+            document.querySelectorAll('.custom-multiselect input[type="checkbox"]').forEach(c => c.checked = false);
+            
+            // Reset text label dropdown
+            const defaultTexts = {
+                'filterDestination': 'Staging',
+                'filterService': 'Service',
+                'filterCod': 'Status',
+                'filterChannel': 'Channel',
+                'filterSla': 'SLA'
+            };
+            Object.keys(defaultTexts).forEach(id => {
+                document.getElementById(`text-${id}`).textContent = `Semua ${defaultTexts[id]}`;
+            });
+            
+            // Kosongkan array filter aktif
+            Object.keys(activeFilters).forEach(k => activeFilters[k] = []);
+            
+            applyFilters();
+        };
+
         // Inisialisasi Dashboard setelah data diload
         function initDashboard() {
             emptyState.classList.add('hidden');
             dashboardContent.classList.remove('hidden');
             
             populateDropdowns();
-            resetFilters();
             applyFilters();
         }
 
-        // Mengisi pilihan unik untuk Dropdown Filter
+        // Mengisi pilihan unik untuk Dropdown Filter (Tom Select Multi)
         function populateDropdowns() {
             const getUnique = (field) => {
                 const unique = [...new Set(rawData.map(item => item[field]).filter(Boolean))];
@@ -1033,28 +1116,77 @@
                 delivery_sla: getUnique('delivery_sla')
             };
 
-            const fillSelect = (selectElem, optArray, defaultText) => {
-                selectElem.innerHTML = `<option value="All">${defaultText}</option>`;
+            const buildCustomDropdown = (filterKey, elementId, optArray, defaultText) => {
+                const menu = document.getElementById(`menu-${elementId}`);
+                const textSpan = document.getElementById(`text-${elementId}`);
+                
+                let html = `
+                    <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 cursor-pointer border-b border-gray-100 font-bold text-blue-700 text-sm m-0 transition-colors">
+                        <input type="checkbox" class="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 chk-all-${elementId}" value="ALL">
+                        <span class="select-none flex-1">Pilih Semua</span>
+                    </label>
+                    <div class="max-h-48 overflow-y-auto custom-scrollbar">
+                `;
                 optArray.forEach(opt => {
-                    selectElem.innerHTML += `<option value="${opt}">${opt}</option>`;
+                    html += `
+                        <label class="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 m-0 transition-colors">
+                            <input type="checkbox" class="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 chk-item-${elementId}" value="${opt}">
+                            <span class="select-none truncate flex-1">${opt}</span>
+                        </label>
+                    `;
                 });
+                html += `</div>`;
+                menu.innerHTML = html;
+
+                const chkAll = menu.querySelector(`.chk-all-${elementId}`);
+                const chkItems = menu.querySelectorAll(`.chk-item-${elementId}`);
+
+                const updateState = () => {
+                    const checkedVals = Array.from(chkItems).filter(c => c.checked).map(c => c.value);
+                    
+                    if (checkedVals.length === 0 || checkedVals.length === chkItems.length) {
+                        textSpan.textContent = `Semua ${defaultText}`;
+                        chkAll.checked = (checkedVals.length === chkItems.length && chkItems.length > 0);
+                        activeFilters[filterKey] = []; // Array kosong berarti tidak difilter (tampil semua)
+                    } else if (checkedVals.length <= 2) {
+                        textSpan.textContent = checkedVals.join(', ');
+                        chkAll.checked = false;
+                        activeFilters[filterKey] = checkedVals;
+                    } else {
+                        textSpan.textContent = `${checkedVals.length} Terpilih`;
+                        chkAll.checked = false;
+                        activeFilters[filterKey] = checkedVals;
+                    }
+                    
+                    applyFilters();
+                };
+
+                // Event listener untuk "Pilih Semua"
+                chkAll.addEventListener('change', (e) => {
+                    const isChecked = e.target.checked;
+                    chkItems.forEach(c => c.checked = isChecked);
+                    updateState();
+                });
+
+                // Event listener untuk tiap item
+                chkItems.forEach(c => {
+                    c.addEventListener('change', updateState);
+                });
+
+                // Reset inisialisasi awal
+                activeFilters[filterKey] = [];
+                textSpan.textContent = `Semua ${defaultText}`;
             };
 
-            fillSelect(inputs.destination_staging, options.destination_staging, 'Semua Staging');
-            fillSelect(inputs.service_code, options.service_code, 'Semua Service');
-            fillSelect(inputs.use_cod, options.use_cod, 'Semua Status');
-            fillSelect(inputs.channel, options.channel, 'Semua Channel');
-            fillSelect(inputs.delivery_sla, options.delivery_sla, 'Semua SLA');
+            buildCustomDropdown('destination_staging', 'filterDestination', options.destination_staging, 'Staging');
+            buildCustomDropdown('service_code', 'filterService', options.service_code, 'Service');
+            buildCustomDropdown('use_cod', 'filterCod', options.use_cod, 'Status');
+            buildCustomDropdown('channel', 'filterChannel', options.channel, 'Channel');
+            buildCustomDropdown('delivery_sla', 'filterSla', options.delivery_sla, 'SLA');
         }
 
-        function resetFilters() {
-            filterInputs.forEach(input => {
-                if(input.tagName === 'SELECT') input.value = 'All';
-                if(input.tagName === 'INPUT') input.value = '';
-            });
-        }
-
-        filterInputs.forEach(input => {
+        // Filter event untuk Date Inputs saja (karena dropdown sudah dicover oleh onChange Tom Select)
+        dateInputs.forEach(input => {
             input.addEventListener('change', applyFilters);
         });
 
@@ -1062,30 +1194,29 @@
         function applyFilters() {
             const startStr = inputs.startDate.value;
             const endStr = inputs.endDate.value;
-            const filters = {
-                destination_staging: inputs.destination_staging.value,
-                service_code: inputs.service_code.value,
-                use_cod: inputs.use_cod.value,
-                channel: inputs.channel.value,
-                delivery_sla: inputs.delivery_sla.value
-            };
-
+            
             let startDt = startStr ? new Date(startStr) : null;
             let endDt = endStr ? new Date(endStr + 'T23:59:59') : null;
 
             filteredData = rawData.filter(row => {
                 let isValid = true;
 
+                // Filter Rentang Tanggal
                 if (row.input_date) {
                     const rowDt = new Date(row.input_date);
                     if (startDt && rowDt < startDt) isValid = false;
                     if (endDt && rowDt > endDt) isValid = false;
                 }
 
-                for (const key in filters) {
-                    if (filters[key] !== 'All' && row[key] !== filters[key]) {
-                        isValid = false;
-                        break;
+                // Filter Custom Dropdown Berbasis Array
+                for (const key in activeFilters) {
+                    const selectedArr = activeFilters[key];
+                    // Jika array tidak kosong (ada yang dipilih secara spesifik)
+                    if (selectedArr.length > 0) {
+                        if (!selectedArr.includes(row[key])) {
+                            isValid = false;
+                            break;
+                        }
                     }
                 }
 
@@ -1170,48 +1301,141 @@
         }
 
         function renderTrend80Chart() {
-            const container = document.getElementById('chartTrend80');
-            const dateCounts = {};
+            const ctx = document.getElementById('chartTrend80Canvas').getContext('2d');
+            const dateSet = new Set();
+            const inputCounts = {};
+            const doneCounts = {};
 
+            // Helper validasi tanggal format YYYY-MM-DD agar tanggal invalid di-takeout
+            const isValidDate = (dStr) => {
+                if (!dStr.match(/^\d{4}-\d{2}-\d{2}$/)) return false;
+                const d = new Date(dStr);
+                return !isNaN(d.getTime());
+            };
+
+            // Mengumpulkan data unik dari input_date & 80_tm untuk rentang X-Axis
             filteredData.forEach(row => {
-                if (row['80_tm'] && row['80_tm'].trim() !== '') {
-                    const dateStr = row['80_tm'].trim().split(' ')[0]; 
-                    if (!dateCounts[dateStr]) {
-                        dateCounts[dateStr] = 0;
+                if (row.input_date && row.input_date.trim() !== '') {
+                    const dIn = row.input_date.trim().split(' ')[0]; 
+                    if (isValidDate(dIn)) {
+                        dateSet.add(dIn);
+                        inputCounts[dIn] = (inputCounts[dIn] || 0) + 1;
                     }
-                    dateCounts[dateStr]++;
+                }
+                if (row['80_tm'] && row['80_tm'].trim() !== '') {
+                    const d80 = row['80_tm'].trim().split(' ')[0]; 
+                    if (isValidDate(d80)) {
+                        dateSet.add(d80);
+                        doneCounts[d80] = (doneCounts[d80] || 0) + 1;
+                    }
                 }
             });
 
-            const sortedDates = Object.keys(dateCounts).sort((a, b) => new Date(a) - new Date(b));
+            // Mengurutkan tanggal X-Axis secara kronologis
+            const sortedDates = Array.from(dateSet).sort((a, b) => new Date(a) - new Date(b));
 
-            if (sortedDates.length === 0) {
-                container.innerHTML = `<div class="w-full h-full flex items-center justify-center text-sm text-gray-400 py-10">Tidak ada data penyelesaian (80_tm) pada rentang ini</div>`;
-                return;
-            }
-
-            const maxCount = Math.max(...Object.values(dateCounts), 1);
-
-            let html = '';
-            sortedDates.forEach(date => {
-                const count = dateCounts[date];
-                const heightPct = (count / maxCount) * 100;
-                
+            // Format nama label bulan & tanggal
+            const labels = sortedDates.map(date => {
                 const dObj = new Date(date);
                 const day = dObj.getDate().toString().padStart(2, '0');
                 const month = dObj.toLocaleString('id-ID', { month: 'short' });
-                const dateLabel = `${day} ${month}`;
-
-                html += `
-                    <div class="flex flex-col items-center flex-1 min-w-[50px] max-w-[80px] h-full justify-end group">
-                        <span class="text-xs font-bold text-gray-700 mb-1">${count.toLocaleString()}</span>
-                        <div class="w-full bg-indigo-500 rounded-t-md transition-all duration-500 hover:bg-indigo-600" style="height: ${Math.max(heightPct, 2)}%;"></div>
-                        <span class="text-[10px] text-gray-500 mt-2 whitespace-nowrap">${dateLabel}</span>
-                    </div>
-                `;
+                return `${day} ${month}`;
             });
-            
-            container.innerHTML = html;
+
+            const dataInput = sortedDates.map(date => inputCounts[date] || 0);
+            const dataDone = sortedDates.map(date => doneCounts[date] || 0);
+
+            // Hancurkan instansi chart sebelumnya jika ada, agar tidak numpuk
+            if (trendChartInstance) {
+                trendChartInstance.destroy();
+            }
+
+            // Daftarkan plugin DataLabels
+            Chart.register(ChartDataLabels);
+
+            // Render Chart.js Kombinasi
+            trendChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Terkirim / Selesai (80_tm)',
+                            data: dataDone,
+                            borderColor: '#10b981', // Emerald-500
+                            backgroundColor: '#10b981',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 4,
+                            order: 1, // Muncul di atas batang
+                            datalabels: {
+                                align: 'top',
+                                anchor: 'end',
+                                color: '#10b981', // Warna font hijau (menyesuaikan garis)
+                                backgroundColor: '#ffffff', // Background putih agar tidak tenggelam
+                                borderRadius: 4,
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                                offset: 4,
+                                padding: 3
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Total Upload (Berdasarkan Tanggal Input)',
+                            data: dataInput,
+                            backgroundColor: '#6366f1', // Indigo-500
+                            borderRadius: 4,
+                            order: 2, // Muncul di bawah garis
+                            datalabels: {
+                                align: 'bottom', // Taruh angka di bagian atas dalam bar
+                                anchor: 'end',
+                                color: '#6366f1', // Warna font indigo (menyesuaikan batang)
+                                backgroundColor: '#ffffff', // Background putih agar kontras
+                                borderRadius: 4,
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                                padding: 3
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    layout: {
+                        padding: {
+                            top: 25 // Beri ruang di atas agar label angka tidak terpotong
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false // MENGHILANGKAN LEGEND
+                        },
+                        tooltip: {
+                            usePointStyle: true,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            display: false, // HILANGKAN SUMBU Y
+                            beginAtZero: true
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         function renderStatusTable() {
