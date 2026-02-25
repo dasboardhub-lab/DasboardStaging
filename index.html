@@ -138,10 +138,10 @@
             </div>
 
             <!-- Toolbar: Filters + Actions on 1 Line -->
-            <div class="flex items-end gap-2.5 overflow-x-auto pb-2 custom-scrollbar w-full">
+            <div class="flex flex-wrap items-end gap-2.5 pb-2 w-full">
                 
                 <!-- Date Range Filters (Gabungan dalam 1 Pill) -->
-                <div class="min-w-[270px] flex-none">
+                <div class="min-w-[270px] flex-auto xl:flex-none">
                     <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Rentang Waktu</label>
                     <div class="flex items-center justify-between w-full border border-gray-200 rounded-lg px-3 bg-gray-50 hover:bg-white focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-500 transition-all shadow-sm h-9">
                         <div class="flex items-center flex-1">
@@ -251,23 +251,79 @@
         <div id="dashboardContent" class="hidden">
             
             <!-- STATS OVERVIEW -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col">
-                    <span class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Total AWB (Raw)</span>
-                    <span class="text-2xl font-bold text-gray-800" id="statTotalRaw">0</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+                
+                <!-- Card 1: Total AWB -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col relative overflow-hidden group">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-gray-500 text-[11px] font-bold uppercase tracking-wider">Total AWB (Terfilter)</span>
+                        <div class="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-end gap-3 mb-1">
+                        <span class="text-3xl font-extrabold text-gray-800" id="kpiAwb">0</span>
+                        <div id="trendAwb" class="text-[11px] font-bold mb-1"></div>
+                    </div>
+                    <p class="text-[10px] text-gray-400 font-medium" id="desc-awb">Pilih rentang tanggal untuk tren</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex flex-col bg-blue-50/30">
-                    <span class="text-blue-600 text-xs font-semibold uppercase tracking-wider mb-1">AWB Terfilter</span>
-                    <span class="text-2xl font-bold text-blue-700" id="statTotalFiltered">0</span>
+
+                <!-- Card 2: Total Pendingan -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col relative overflow-hidden group">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-gray-500 text-[11px] font-bold uppercase tracking-wider">Total Pendingan</span>
+                        <div class="p-2 bg-amber-50 text-amber-600 rounded-lg group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-end gap-3 mb-1">
+                        <span class="text-3xl font-extrabold text-gray-800" id="kpiPending">0</span>
+                        <div id="trendPending" class="text-[11px] font-bold mb-1"></div>
+                    </div>
+                    <p class="text-[10px] text-gray-400 font-medium" id="desc-pending">Pilih rentang tanggal untuk tren</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col">
-                    <span class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">SLA OK (Terfilter)</span>
-                    <span class="text-2xl font-bold text-emerald-600" id="statSlaOk">0</span>
+
+                <!-- Card 3: Delivery SLA -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col relative overflow-hidden group">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-gray-500 text-[11px] font-bold uppercase tracking-wider">Delivery SLA</span>
+                        <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1.5 mt-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-gray-700">OK: <span id="kpiSlaOk" class="text-emerald-600 ml-1">0</span></span>
+                            <div id="trendSlaOk" class="text-[10px] font-bold"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-gray-700">Missed: <span id="kpiSlaMiss" class="text-red-500 ml-1">0</span></span>
+                            <div id="trendSlaMiss" class="text-[10px] font-bold"></div>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-gray-400 font-medium mt-auto pt-2" id="desc-sla">Pilih rentang tanggal untuk tren</p>
                 </div>
-                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col">
-                    <span class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">SLA Missed (Terfilter)</span>
-                    <span class="text-2xl font-bold text-red-600" id="statSlaMissed">0</span>
+
+                <!-- Card 4: Lead Time 47-80 -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col relative overflow-hidden group">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-gray-500 text-[11px] font-bold uppercase tracking-wider">Lead Time (47-80)</span>
+                        <div class="p-2 bg-purple-50 text-purple-600 rounded-lg group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-end gap-2 mb-1">
+                        <span class="text-3xl font-extrabold text-gray-800" id="kpiLt">0</span>
+                        <span class="text-sm font-bold text-gray-500 mb-1">Jam</span>
+                        <div id="trendLt" class="text-[11px] font-bold mb-1 ml-1"></div>
+                    </div>
+                    <div class="flex items-center gap-3 mt-1 pt-2 border-t border-gray-50">
+                        <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Max: <span id="kpiLtMax" class="text-gray-800 ml-0.5">0</span></span>
+                        <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Min: <span id="kpiLtMin" class="text-gray-800 ml-0.5">0</span></span>
+                    </div>
+                    <p class="text-[10px] text-gray-400 font-medium mt-auto pt-2" id="desc-lt">Pilih rentang tanggal untuk tren</p>
                 </div>
+
             </div>
 
             <!-- TREND PENGIRIMAN 80_TM CHART -->
@@ -626,6 +682,8 @@
 
         let rawData = [];
         let filteredData = [];
+        let prevFilteredData = [];
+        let hasDateRange = false;
         let pendingFile = null; 
         let currentAuthAction = null; 
 
@@ -1202,7 +1260,8 @@
                 service_code: getUnique('service_code'),
                 use_cod: getUnique('use_cod'),
                 channel: getUnique('channel'),
-                delivery_sla: getUnique('delivery_sla')
+                // Filter out N/A dan Format Error agar tidak muncul di pilihan dropdown SLA
+                delivery_sla: getUnique('delivery_sla').filter(opt => opt !== 'N/A' && opt !== 'Format Error')
             };
 
             const buildCustomDropdown = (filterKey, elementId, optArray, defaultText) => {
@@ -1284,23 +1343,22 @@
             const startStr = inputs.startDate.value;
             const endStr = inputs.endDate.value;
             
-            let startDt = startStr ? new Date(startStr) : null;
+            // Konversi tanggal yang stabil tanpa terganggu UTC Timezone
+            let startDt = startStr ? new Date(startStr + 'T00:00:00') : null;
             let endDt = endStr ? new Date(endStr + 'T23:59:59') : null;
 
+            // 1. FILTER DATA PERIODE SAAT INI
             filteredData = rawData.filter(row => {
                 let isValid = true;
 
-                // Filter Rentang Tanggal
                 if (row.input_date) {
-                    const rowDt = new Date(row.input_date);
+                    const rowDt = new Date(row.input_date + 'T00:00:00');
                     if (startDt && rowDt < startDt) isValid = false;
                     if (endDt && rowDt > endDt) isValid = false;
                 }
 
-                // Filter Custom Dropdown Berbasis Array
                 for (const key in activeFilters) {
                     const selectedArr = activeFilters[key];
-                    // Jika array tidak kosong (ada yang dipilih secara spesifik)
                     if (selectedArr.length > 0) {
                         if (!selectedArr.includes(row[key])) {
                             isValid = false;
@@ -1308,31 +1366,169 @@
                         }
                     }
                 }
-
                 return isValid;
             });
+
+            // 2. FILTER DATA PERIODE SEBELUMNYA (UNTUK TREN KPI)
+            hasDateRange = !!(startDt && endDt);
+            prevFilteredData = [];
+
+            if (hasDateRange) {
+                // Menghitung jumlah hari pada rentang saat ini
+                const diffTime = Math.abs(endDt - startDt);
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
+
+                // Menggeser rentang waktu persis x hari ke belakang
+                const prevEndDt = new Date(startDt);
+                prevEndDt.setDate(prevEndDt.getDate() - 1);
+                prevEndDt.setHours(23, 59, 59, 999);
+
+                const prevStartDt = new Date(prevEndDt);
+                prevStartDt.setDate(prevStartDt.getDate() - diffDays + 1);
+                prevStartDt.setHours(0, 0, 0, 0);
+
+                prevFilteredData = rawData.filter(row => {
+                    let isValid = true;
+                    if (row.input_date) {
+                        const rowDt = new Date(row.input_date + 'T00:00:00');
+                        if (rowDt < prevStartDt || rowDt > prevEndDt) isValid = false;
+                    } else {
+                        isValid = false; // Jika tidak ada tanggal, jangan dihitung ke dalam prev
+                    }
+
+                    if(isValid) {
+                        for (const key in activeFilters) {
+                            const selectedArr = activeFilters[key];
+                            if (selectedArr.length > 0) {
+                                if (!selectedArr.includes(row[key])) {
+                                    isValid = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    return isValid;
+                });
+            }
 
             updateUI();
         }
 
+        // Kalkulator Metrik KPI
+        function calcMetrics(dataArray) {
+            let awb = dataArray.length;
+            let pending = 0;
+            let slaOk = 0;
+            let slaMissed = 0;
+            let ltSum = 0;
+            let ltCount = 0;
+            let ltMax = -Infinity;
+            let ltMin = Infinity;
+
+            dataArray.forEach(r => {
+                if ((!r['80_tm'] || r['80_tm'].trim() === '') && (!r['_55_tm'] || r['_55_tm'].trim() === '')) {
+                    pending++;
+                }
+                if (r.delivery_sla === 'OK') slaOk++;
+                if (r.delivery_sla === 'Missed') slaMissed++;
+
+                if (r['80_tm'] && r['80_tm'].trim() !== '' && r._47_tm && r._47_tm.trim() !== '') {
+                    const dt80 = new Date(r['80_tm']);
+                    const dt47 = new Date(r._47_tm);
+                    if (!isNaN(dt80) && !isNaN(dt47)) {
+                        const diffHours = (dt80 - dt47) / (1000 * 60 * 60);
+                        ltSum += diffHours;
+                        ltCount++;
+                        if (diffHours > ltMax) ltMax = diffHours;
+                        if (diffHours < ltMin) ltMin = diffHours;
+                    }
+                }
+            });
+
+            return {
+                awb, pending, slaOk, slaMissed,
+                ltAvg: ltCount > 0 ? ltSum / ltCount : 0,
+                ltMax: ltMax === -Infinity ? 0 : ltMax,
+                ltMin: ltMin === Infinity ? 0 : ltMin
+            };
+        }
+
         // Update Summary & Charts
         function updateUI() {
-            document.getElementById('statTotalRaw').textContent = rawData.length.toLocaleString();
-            document.getElementById('statTotalFiltered').textContent = filteredData.length.toLocaleString();
-            
-            const slaOk = filteredData.filter(d => d.delivery_sla === 'OK').length;
-            const slaMissed = filteredData.filter(d => d.delivery_sla === 'Missed').length;
-            
-            document.getElementById('statSlaOk').textContent = slaOk.toLocaleString();
-            document.getElementById('statSlaMissed').textContent = slaMissed.toLocaleString();
+            // Menghitung Metrik Saat Ini & Sebelumnya
+            const currentMetrics = calcMetrics(filteredData);
+            const prevMetrics = hasDateRange ? calcMetrics(prevFilteredData) : null;
 
+            // Mengisi Nilai Utama KPI
+            document.getElementById('kpiAwb').textContent = currentMetrics.awb.toLocaleString();
+            document.getElementById('kpiPending').textContent = currentMetrics.pending.toLocaleString();
+            document.getElementById('kpiSlaOk').textContent = currentMetrics.slaOk.toLocaleString();
+            document.getElementById('kpiSlaMiss').textContent = currentMetrics.slaMissed.toLocaleString();
+            document.getElementById('kpiLt').textContent = currentMetrics.ltAvg === 0 ? '-' : currentMetrics.ltAvg.toFixed(2);
+            document.getElementById('kpiLtMax').textContent = currentMetrics.ltMax === 0 ? '-' : currentMetrics.ltMax.toFixed(2);
+            document.getElementById('kpiLtMin').textContent = currentMetrics.ltMin === 0 ? '-' : currentMetrics.ltMin.toFixed(2);
+
+            // Helper untuk merender Tren / Persentase
+            const renderTrend = (elementId, curr, prev, inverseGood, descId) => {
+                const el = document.getElementById(elementId);
+                const desc = document.getElementById(descId);
+
+                // Jika user belum memilih rentang tanggal
+                if (!hasDateRange) {
+                    el.innerHTML = '';
+                    if(desc) desc.textContent = 'Pilih rentang tanggal untuk tren';
+                    return;
+                }
+
+                if(desc) desc.textContent = 'vs periode sebelumnya';
+
+                if (prev === 0 && curr === 0) {
+                    el.innerHTML = `<span class="px-1.5 py-0.5 rounded-md text-gray-500 bg-gray-100 flex items-center gap-0.5">— 0%</span>`;
+                    return;
+                } else if (prev === 0) {
+                    // Jika sebelumnya 0 dan sekarang ada isinya (100% lompatan)
+                    const isGood = inverseGood ? false : true; 
+                    const color = isGood ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50';
+                    el.innerHTML = `<span class="px-1.5 py-0.5 rounded-md ${color} flex items-center gap-0.5">↑ 100%</span>`;
+                    return;
+                }
+
+                const diff = curr - prev;
+                const pct = Math.abs((diff / prev) * 100).toFixed(1);
+                
+                if (diff === 0) {
+                    el.innerHTML = `<span class="px-1.5 py-0.5 rounded-md text-gray-500 bg-gray-100 flex items-center gap-0.5">— 0%</span>`;
+                    return;
+                }
+
+                const isUp = diff > 0;
+                // Logika Cerdas: Pada Pendingan & LT, Turun itu Bagus (Hijau). Pada AWB & OK, Naik itu Bagus.
+                const isGood = inverseGood ? !isUp : isUp; 
+                const colorClass = isGood ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50';
+                const icon = isUp ? '↑' : '↓';
+
+                el.innerHTML = `<span class="px-1.5 py-0.5 rounded-md ${colorClass} flex items-center gap-0.5">${icon} ${pct}%</span>`;
+            };
+
+            // Eksekusi Logika Tren ke UI
+            renderTrend('trendAwb', currentMetrics.awb, prevMetrics?.awb, false, 'desc-awb');
+            renderTrend('trendPending', currentMetrics.pending, prevMetrics?.pending, true, 'desc-pending');
+            renderTrend('trendSlaOk', currentMetrics.slaOk, prevMetrics?.slaOk, false, 'desc-sla');
+            renderTrend('trendSlaMiss', currentMetrics.slaMissed, prevMetrics?.slaMissed, true, null); // desc dipegang oleh slaOk
+            renderTrend('trendLt', currentMetrics.ltAvg, prevMetrics?.ltAvg, true, 'desc-lt');
+
+            // Render Chart Lainnya
             renderTrend80Chart();
 
             const destData = getChartData('destination_staging').slice(0, 15); 
             const serviceData = getChartData('service_code');
             const codData = getChartData('use_cod');
             const channelData = getChartData('channel');
-            const slaData = getChartData('delivery_sla');
+            
+            // Khusus untuk grafik SLA, kita "takeout" nilai N/A dan Format Error
+            const slaData = getChartData('delivery_sla').filter(item => 
+                item.name !== 'N/A' && item.name !== 'Format Error'
+            );
 
             renderBarChart('chartDestination', destData, 'bg-indigo-500');
             renderBarChart('chartService', serviceData, 'bg-blue-500');
@@ -1451,7 +1647,7 @@
                     datasets: [
                         {
                             type: 'line',
-                            label: 'Terkirim / Selesai (80_tm)',
+                            label: 'Done Delivery',
                             data: dataDone,
                             borderColor: '#10b981', // Emerald-500
                             backgroundColor: '#10b981',
@@ -1474,7 +1670,7 @@
                         },
                         {
                             type: 'bar',
-                            label: 'Total Upload (Berdasarkan Tanggal Input)',
+                            label: 'Inbound SS',
                             data: dataInput,
                             backgroundColor: '#6366f1', // Indigo-500
                             borderRadius: 4,
