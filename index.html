@@ -341,7 +341,7 @@
                     </div>
                     <table class="w-full text-left border-collapse min-w-max">
                         <thead>
-                            <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
+                            <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200 h-14">
                                 <th class="p-3 font-semibold">Destination Staging</th>
                                 <th class="p-3 font-semibold text-right border-l border-gray-200">Total AWB</th>
                                 <th class="p-3 font-semibold text-right border-l border-gray-200">Opcode 47</th>
@@ -369,7 +369,7 @@
                     </div>
                     <table class="w-full text-left border-collapse table-fixed">
                         <thead>
-                            <tr class="bg-gray-50 text-gray-600 text-[10px] uppercase tracking-wider border-y border-gray-200">
+                            <tr class="bg-gray-50 text-gray-600 text-[10px] uppercase tracking-wider border-y border-gray-200 h-14">
                                 <th class="p-2 font-semibold w-[35%]">Staging</th>
                                 <th class="p-2 font-semibold text-right border-l border-gray-200 w-[20%]">AWB</th>
                                 <th class="p-2 font-semibold text-right border-l border-gray-200 w-[45%]">Lead Time (Jam)</th>
@@ -385,34 +385,70 @@
                 </div>
             </div>
 
-            <!-- TABEL EXPECT DELIVERY -->
-            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mt-6 overflow-x-auto">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="p-2 rounded-lg bg-gray-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            <!-- DUA TABEL BERDAMPINGAN: Expect Delivery & Sisa Waktu SLA -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <!-- TABEL EXPECT DELIVERY -->
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="p-2 rounded-lg bg-gray-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-800">Tabel Expect Delivery (Status EDD vs Tanggal Input)</h3>
                     </div>
-                    <h3 class="text-sm font-semibold text-gray-800">Tabel Expect Delivery (Status EDD vs Tanggal Input)</h3>
+                    <table class="w-full text-left border-collapse min-w-max">
+                        <thead id="tableExpHead">
+                            <!-- Head goes here -->
+                        </thead>
+                        <tbody id="tableExpBody" class="text-sm divide-y divide-gray-100">
+                            <!-- Content goes here -->
+                        </tbody>
+                        <tfoot id="tableExpFoot" class="bg-gray-50 font-bold text-gray-800 text-sm border-t-2 border-gray-200">
+                            <!-- Overall goes here -->
+                        </tfoot>
+                    </table>
                 </div>
-                <table class="w-full text-left border-collapse min-w-max">
-                    <thead id="tableExpHead">
-                        <!-- Head goes here -->
-                    </thead>
-                    <tbody id="tableExpBody" class="text-sm divide-y divide-gray-100">
-                        <!-- Content goes here -->
-                    </tbody>
-                    <tfoot id="tableExpFoot" class="bg-gray-50 font-bold text-gray-800 text-sm border-t-2 border-gray-200">
-                        <!-- Overall goes here -->
-                    </tfoot>
-                </table>
+
+                <!-- TABEL AGING SLA PENDINGAN -->
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="p-2 rounded-lg bg-purple-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </div>
+                            <h3 class="text-sm font-semibold text-gray-800">Tabel Sisa Waktu SLA (Pending Terhadap Hari Ini)</h3>
+                        </div>
+                        <button onclick="downloadSlaAgingCsv(this, 'ALL')" class="px-3 py-1.5 text-xs font-bold bg-white text-purple-700 hover:bg-purple-50 rounded-lg transition-colors whitespace-nowrap border border-purple-200 shadow-sm flex items-center gap-1.5" title="Download CSV AWB Sisa Waktu SLA">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            Download CSV
+                        </button>
+                    </div>
+                    <table class="w-full text-left border-collapse min-w-max">
+                        <thead id="tableAgingHead">
+                            <!-- Head goes here -->
+                        </thead>
+                        <tbody id="tableAgingBody" class="text-sm divide-y divide-gray-100">
+                            <!-- Content goes here -->
+                        </tbody>
+                        <tfoot id="tableAgingFoot" class="bg-purple-50 font-bold text-purple-700 text-sm border-t-2 border-gray-200">
+                            <!-- Overall goes here -->
+                        </tfoot>
+                    </table>
+                </div>
             </div>
 
             <!-- TABEL DATA PENDINGAN -->
             <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mt-6 overflow-x-auto">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="p-2 rounded-lg bg-red-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 rounded-lg bg-red-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-800">Tabel Data Pendingan (Sebaran Lokasi FOP)</h3>
                     </div>
-                    <h3 class="text-sm font-semibold text-gray-800">Tabel Data Pendingan (Sebaran Lokasi FOP)</h3>
+                    <button onclick="downloadPendingCsv(this, 'ALL')" class="px-3 py-1.5 text-xs font-bold bg-white text-red-700 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap border border-red-200 shadow-sm flex items-center gap-1.5" title="Download CSV SELURUH AWB pending">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        Download CSV
+                    </button>
                 </div>
                 <table class="w-full text-left border-collapse min-w-max">
                     <thead id="tablePendingHead">
@@ -427,25 +463,42 @@
                 </table>
             </div>
 
-            <!-- TABEL PAKET RETURN -->
-            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mt-6 overflow-x-auto">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="p-2 rounded-lg bg-orange-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v6h6"/></svg>
+            <!-- TABEL PAKET RETURN (Collapsible / Bisa Dilipat) -->
+            <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mt-6">
+                <div class="flex items-center justify-between mb-2 cursor-pointer select-none group" onclick="toggleReturnTable()">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 rounded-lg bg-orange-50 group-hover:bg-orange-100 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v6h6"/></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-800 group-hover:text-orange-600 transition-colors">Tabel Paket Return (Sebaran Lokasi FOP)</h3>
+                        <!-- Lencana Notifikasi (Badge) -->
+                        <span id="badgeReturnCount" class="ml-2 px-2.5 py-0.5 rounded-md bg-orange-100 text-orange-700 text-xs font-bold border border-orange-200 hidden shadow-sm">0 Paket</span>
                     </div>
-                    <h3 class="text-sm font-semibold text-gray-800">Tabel Paket Return (Sebaran Lokasi FOP)</h3>
+                    <div class="flex items-center gap-3">
+                        <button onclick="event.stopPropagation(); downloadReturnCsv(this, 'ALL')" class="px-3 py-1.5 text-xs font-bold bg-white text-orange-700 hover:bg-orange-50 rounded-lg transition-colors whitespace-nowrap border border-orange-200 shadow-sm flex items-center gap-1.5" title="Download CSV SELURUH AWB return">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            Download CSV
+                        </button>
+                        <div class="p-1 rounded-md hover:bg-gray-100 transition-colors">
+                            <svg id="arrowReturnTable" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 transition-transform duration-300"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
                 </div>
-                <table class="w-full text-left border-collapse min-w-max">
-                    <thead id="tableReturnHead">
-                        <!-- Head goes here -->
-                    </thead>
-                    <tbody id="tableReturnBody" class="text-sm divide-y divide-gray-100">
-                        <!-- Content goes here -->
-                    </tbody>
-                    <tfoot id="tableReturnFoot" class="bg-orange-50 font-bold text-orange-700 text-sm border-t-2 border-gray-200">
-                        <!-- Overall goes here -->
-                    </tfoot>
-                </table>
+                
+                <!-- Pembungkus Isi Tabel yang akan di-togle -->
+                <div id="containerReturnTable" class="hidden overflow-x-auto pt-4 border-t border-gray-100 mt-2">
+                    <table class="w-full text-left border-collapse min-w-max">
+                        <thead id="tableReturnHead">
+                            <!-- Head goes here -->
+                        </thead>
+                        <tbody id="tableReturnBody" class="text-sm divide-y divide-gray-100">
+                            <!-- Content goes here -->
+                        </tbody>
+                        <tfoot id="tableReturnFoot" class="bg-orange-50 font-bold text-orange-700 text-sm border-t-2 border-gray-200">
+                            <!-- Overall goes here -->
+                        </tfoot>
+                    </table>
+                </div>
             </div>
 
         </div>
@@ -1059,6 +1112,20 @@
             }
         };
 
+        // --- LOGIKA TOGGLE TABEL RETURN ---
+        window.toggleReturnTable = function() {
+            const container = document.getElementById('containerReturnTable');
+            const arrow = document.getElementById('arrowReturnTable');
+            
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                arrow.classList.add('rotate-180');
+            } else {
+                container.classList.add('hidden');
+                arrow.classList.remove('rotate-180');
+            }
+        };
+
         // Tutup menu dropdown jika mengklik area di luar filter
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.custom-multiselect')) {
@@ -1255,6 +1322,7 @@
             renderLtTable();
             renderExpTable();
             renderPendingTable();
+            renderSlaAgingTable();
             renderReturnTable();
         }
 
@@ -1476,7 +1544,7 @@
             let rowsHtml = '';
             tableData.forEach(item => {
                 rowsHtml += `
-                    <tr class="hover:bg-blue-50/50 transition-colors">
+                    <tr class="hover:bg-blue-50/50 transition-colors h-16">
                         <td class="p-3 text-gray-800 font-medium">${item.staging}</td>
                         <td class="p-3 text-right text-gray-600 border-l border-gray-100">${item.total.toLocaleString()}</td>
                         <td class="p-3 text-right text-gray-600 border-l border-gray-100">${formatPct(item.c47, item.total)}</td>
@@ -1489,7 +1557,7 @@
             tbody.innerHTML = rowsHtml;
 
             tfoot.innerHTML = `
-                <tr>
+                <tr class="h-14">
                     <td class="p-3 text-blue-700">TOTAL KESELURUHAN</td>
                     <td class="p-3 text-right text-blue-700 border-l border-gray-200">${tAwb.toLocaleString()}</td>
                     <td class="p-3 text-right text-blue-700 border-l border-gray-200">${formatPct(t47, tAwb)}</td>
@@ -1554,7 +1622,7 @@
             tableData.forEach(item => {
                 const avgHours = item.sumHours / item.count;
                 rowsHtml += `
-                    <tr class="hover:bg-blue-50/50 transition-colors">
+                    <tr class="hover:bg-blue-50/50 transition-colors h-16">
                         <td class="p-2 text-gray-800 font-medium truncate" title="${item.staging}">${item.staging}</td>
                         <td class="p-2 text-right text-gray-600 border-l border-gray-100">${item.count.toLocaleString()}</td>
                         <td class="p-2 border-l border-gray-100">
@@ -1573,7 +1641,7 @@
 
             const globalAvg = sumTotalHours / tAwb;
             tfoot.innerHTML = `
-                <tr>
+                <tr class="h-14">
                     <td class="p-2 text-blue-700 truncate" title="TOTAL KESELURUHAN">TOTAL</td>
                     <td class="p-2 text-right text-blue-700 border-l border-gray-200">${tAwb.toLocaleString()}</td>
                     <td class="p-2 border-l border-gray-200">
@@ -1724,15 +1792,82 @@
             button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Terunduh`;
             
             const isSemua = targetStaging === 'ALL';
-            button.className = "px-3 py-1 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-md transition-colors whitespace-nowrap";
+            button.className = "px-3 py-1.5 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 border border-emerald-200 shadow-sm";
             
             setTimeout(() => {
                 button.innerHTML = oldHTML;
                 if (isSemua) {
-                    button.className = "px-3 py-1 text-xs font-bold bg-red-100 text-red-700 hover:bg-red-200 rounded-md transition-colors whitespace-nowrap";
+                    button.className = "px-3 py-1.5 text-xs font-bold bg-white text-red-700 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap border border-red-200 shadow-sm flex items-center gap-1.5";
                 } else {
-                    button.className = "px-3 py-1 text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors whitespace-nowrap";
+                    button.className = "px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5";
                 }
+            }, 2000);
+        };
+
+        window.downloadSlaAgingCsv = function(button, targetStaging) {
+            let csvContent = "Destination Staging,AWB,Sisa Waktu SLA,Expect Delivery TM\n"; 
+            let hasData = false;
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Pastikan acuan di tengah malam
+
+            filteredData.forEach(row => {
+                // Seleksi hanya data yang masih pending
+                if ((!row['80_tm'] || row['80_tm'].trim() === '') && (!row['_55_tm'] || row['_55_tm'].trim() === '')) {
+                    
+                    const staging = row.destination_staging || 'Unknown';
+                    const awb = row.awb;
+                    
+                    if (awb && (targetStaging === 'ALL' || staging === targetStaging)) {
+                        let cat = 'Unknown';
+                        let eddRaw = row.expect_delivery_tm || '';
+                        
+                        if (eddRaw.trim() !== '') {
+                            const expDateStr = eddRaw.trim().split(' ')[0]; 
+                            const exp = new Date(expDateStr + 'T00:00:00');
+                            
+                            if (!isNaN(exp)) {
+                                const diffTime = exp - today;
+                                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
+                                
+                                if (diffDays < 0) cat = '< 0 Hari';
+                                else if (diffDays === 0) cat = '0 Hari';
+                                else if (diffDays === 1 || diffDays === 2) cat = '1 - 2 Hari';
+                                else if (diffDays >= 3) cat = '>= 3 Hari';
+                            }
+                        }
+
+                        csvContent += `"${staging}","${awb}","${cat}","${eddRaw}"\n`;
+                        hasData = true;
+                    }
+                }
+            });
+
+            if (!hasData) return;
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            const fileName = targetStaging === 'ALL' 
+                ? 'Sisa_Waktu_SLA_Semua_Staging.csv' 
+                : `Sisa_Waktu_SLA_${targetStaging.replace(/\s+/g, '_')}.csv`;
+
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            const oldHTML = button.innerHTML;
+            button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Terunduh`;
+            
+            button.className = "px-3 py-1.5 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 border border-emerald-200 shadow-sm";
+            
+            setTimeout(() => {
+                button.innerHTML = oldHTML;
+                button.className = "px-3 py-1.5 text-xs font-bold bg-white text-purple-700 hover:bg-purple-50 rounded-lg transition-colors whitespace-nowrap border border-purple-200 shadow-sm flex items-center gap-1.5";
             }, 2000);
         };
 
@@ -1774,11 +1909,11 @@
             const oldHTML = button.innerHTML;
             button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Terunduh`;
             
-            button.className = "px-3 py-1 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-md transition-colors whitespace-nowrap border border-emerald-200 shadow-sm";
+            button.className = "px-3 py-1.5 text-xs font-bold bg-emerald-100 text-emerald-700 rounded-lg transition-colors whitespace-nowrap border border-emerald-200 shadow-sm flex items-center gap-1.5";
             
             setTimeout(() => {
                 button.innerHTML = oldHTML;
-                button.className = "px-3 py-1 text-xs font-bold bg-white text-orange-700 hover:bg-orange-100 rounded-md transition-colors whitespace-nowrap border border-orange-200 shadow-sm";
+                button.className = "px-3 py-1.5 text-xs font-bold bg-white text-orange-700 hover:bg-orange-50 rounded-lg transition-colors whitespace-nowrap border border-orange-200 shadow-sm flex items-center gap-1.5";
             }, 2000);
         };
 
@@ -1859,19 +1994,117 @@
 
             let footHtml = `
                 <tr>
-                    <td class="p-3 flex items-center justify-between sticky left-0 bg-red-50">
-                        <span>TOTAL KESELURUHAN</span>
-                        <button onclick="downloadPendingCsv(this, 'ALL')" class="px-3 py-1 text-xs font-bold bg-white text-red-700 hover:bg-red-100 rounded-md transition-colors whitespace-nowrap border border-red-200 shadow-sm" title="Download CSV SELURUH AWB pending di tabel ini">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                            Download Semua CSV
-                        </button>
-                    </td>`;
+                    <td class="p-3 font-bold sticky left-0 bg-red-50">TOTAL KESELURUHAN</td>`;
             
             sortedFops.forEach(fop => {
                 footHtml += `<td class="p-3 text-right border-l border-red-200">${(totalsPerFop[fop] || 0).toLocaleString()}</td>`;
             });
             
             footHtml += `<td class="p-3 text-right border-l border-red-200 text-base font-bold">${totalPendingOverall.toLocaleString()}</td></tr>`;
+            tfoot.innerHTML = footHtml;
+        }
+
+        function renderSlaAgingTable() {
+            const stagingGroups = {};
+            let totalOverall = 0;
+            const totals = { '< 0 Hari': 0, '0 Hari': 0, '1 - 2 Hari': 0, '>= 3 Hari': 0, 'Unknown': 0 };
+            
+            // Set waktu acuan di awal hari ini
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            filteredData.forEach(row => {
+                // Hanya memproses yang statusnya Pending
+                if ((!row['80_tm'] || row['80_tm'].trim() === '') && (!row['_55_tm'] || row['_55_tm'].trim() === '')) {
+                    const staging = row.destination_staging || 'Unknown';
+                    let status = 'Unknown';
+                    
+                    if (row.expect_delivery_tm && row.expect_delivery_tm.trim() !== '') {
+                        const expDateStr = row.expect_delivery_tm.trim().split(' ')[0]; 
+                        const exp = new Date(expDateStr + 'T00:00:00');
+                        
+                        if (!isNaN(exp)) {
+                            const diffTime = exp - today;
+                            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
+                            
+                            if (diffDays < 0) status = '< 0 Hari';
+                            else if (diffDays === 0) status = '0 Hari';
+                            else if (diffDays === 1 || diffDays === 2) status = '1 - 2 Hari';
+                            else if (diffDays >= 3) status = '>= 3 Hari';
+                        }
+                    }
+
+                    if (!stagingGroups[staging]) {
+                        stagingGroups[staging] = { 
+                            total: 0, 
+                            statuses: { '< 0 Hari': 0, '0 Hari': 0, '1 - 2 Hari': 0, '>= 3 Hari': 0, 'Unknown': 0 } 
+                        };
+                    }
+
+                    stagingGroups[staging].statuses[status]++;
+                    stagingGroups[staging].total++;
+
+                    totals[status]++;
+                    totalOverall++;
+                }
+            });
+
+            const tableData = Object.keys(stagingGroups).map(key => ({
+                staging: key,
+                ...stagingGroups[key]
+            })).sort((a, b) => b.total - a.total);
+
+            const thead = document.getElementById('tableAgingHead');
+            const tbody = document.getElementById('tableAgingBody');
+            const tfoot = document.getElementById('tableAgingFoot');
+
+            if (tableData.length === 0) {
+                thead.innerHTML = '<tr><th class="p-3">Destination Staging</th></tr>';
+                tbody.innerHTML = '<tr><td class="p-6 text-center text-gray-400">Tidak ada data pendingan untuk dihitung sisa waktunya.</td></tr>';
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            const columns = ['< 0 Hari', '0 Hari', '1 - 2 Hari', '>= 3 Hari'];
+            const showUnknown = totals['Unknown'] > 0;
+            const displayCols = [...columns];
+            if (showUnknown) displayCols.push('Unknown');
+
+            let headHtml = `<tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-y border-gray-200">
+                <th class="p-3 font-semibold sticky left-0 bg-gray-50">Destination Staging</th>`;
+            displayCols.forEach(col => {
+                headHtml += `<th class="p-3 font-semibold text-right border-l border-gray-200">${col}</th>`;
+            });
+            headHtml += `<th class="p-3 font-semibold text-right border-l border-gray-200 bg-purple-50">Total Pending</th></tr>`;
+            thead.innerHTML = headHtml;
+
+            let rowsHtml = '';
+            tableData.forEach(item => {
+                rowsHtml += `
+                    <tr class="hover:bg-purple-50/30 transition-colors">
+                        <td class="p-3 text-gray-800 font-medium sticky left-0 bg-white">${item.staging}</td>`;
+                
+                displayCols.forEach(col => {
+                    const count = item.statuses[col] || 0;
+                    
+                    // Beri warna merah pada teks jika SLA minus (< 0 Hari)
+                    let textStyle = (col === '< 0 Hari' && count > 0) ? 'text-red-600 font-bold' : 'text-gray-600';
+                    if (col === '0 Hari' && count > 0) textStyle = 'text-amber-600 font-bold';
+
+                    rowsHtml += `<td class="p-3 text-right ${textStyle} border-l border-gray-100">${count > 0 ? count.toLocaleString() : '-'}</td>`;
+                });
+                
+                rowsHtml += `<td class="p-3 text-right font-bold text-purple-700 border-l border-gray-100 bg-purple-50/20">${item.total.toLocaleString()}</td></tr>`;
+            });
+            tbody.innerHTML = rowsHtml;
+
+            let footHtml = `
+                <tr>
+                    <td class="p-3 text-purple-800 sticky left-0 bg-purple-50">TOTAL KESELURUHAN</td>`;
+            displayCols.forEach(col => {
+                footHtml += `<td class="p-3 text-right text-purple-800 border-l border-purple-200">${totals[col].toLocaleString()}</td>`;
+            });
+            footHtml += `<td class="p-3 text-right font-bold text-purple-800 border-l border-purple-200 bg-purple-100">${totalOverall.toLocaleString()}</td></tr>`;
             tfoot.innerHTML = footHtml;
         }
 
@@ -1904,6 +2137,15 @@
                     totalReturnOverall++;
                 }
             });
+
+            // Pembaruan Lencana (Badge) Notifikasi
+            const badge = document.getElementById('badgeReturnCount');
+            if (totalReturnOverall > 0) {
+                badge.textContent = `${totalReturnOverall.toLocaleString()} Paket`;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
 
             const sortedFops = Array.from(fopSet).sort((a, b) => {
                 if (a === 'Belum Diupdate') return 1;
@@ -1952,13 +2194,7 @@
 
             let footHtml = `
                 <tr>
-                    <td class="p-3 flex items-center justify-between sticky left-0 bg-orange-50">
-                        <span>TOTAL KESELURUHAN</span>
-                        <button onclick="downloadReturnCsv(this, 'ALL')" class="px-3 py-1 text-xs font-bold bg-white text-orange-700 hover:bg-orange-100 rounded-md transition-colors whitespace-nowrap border border-orange-200 shadow-sm" title="Download CSV SELURUH AWB return di tabel ini">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                            Download Semua CSV
-                        </button>
-                    </td>`;
+                    <td class="p-3 font-bold sticky left-0 bg-orange-50">TOTAL KESELURUHAN</td>`;
             
             sortedFops.forEach(fop => {
                 footHtml += `<td class="p-3 text-right border-l border-orange-200">${(totalsPerFop[fop] || 0).toLocaleString()}</td>`;
