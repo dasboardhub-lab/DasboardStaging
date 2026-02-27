@@ -223,6 +223,11 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
 
+                <!-- Tombol Baru: Perbaiki/Sapu Database -->
+                <button onclick="cleanDatabaseAWB()" class="shrink-0 w-9 h-9 text-purple-500 hover:text-purple-600 hover:bg-purple-50 border border-purple-100 bg-white rounded-lg transition-all shadow-sm hover:-translate-y-0.5 flex items-center justify-center" title="Bersihkan dan Perbaiki AWB Kotor (Tanda Kutip) di Database">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M15 9h0"/><path d="M17.8 6.2 19 5"/><path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/></svg>
+                </button>
+
             </div>
         </div>
     </div>
@@ -623,23 +628,8 @@
 
                     <div class="overflow-x-auto border border-gray-200 rounded-lg">
                         <table class="w-full text-left border-collapse min-w-max">
-                            <thead>
-                                <tr class="bg-gray-100 text-gray-600 text-[10px] uppercase tracking-wider border-b border-gray-200 h-10">
-                                    <th class="p-3 font-bold sticky left-0 bg-gray-100 z-10">AWB</th>
-                                    <th class="p-3 font-bold border-l border-gray-200">Staging</th>
-                                    <th class="p-3 font-bold border-l border-gray-200">Service</th>
-                                    <th class="p-3 font-bold border-l border-gray-200">SLA Status</th>
-                                    <th class="p-3 font-bold border-l border-gray-200 text-purple-600">EDD</th>
-                                    <th class="p-3 font-bold border-l border-gray-200 text-blue-600">47_TM</th>
-                                    <th class="p-3 font-bold border-l border-gray-200">70_First</th>
-                                    <th class="p-3 font-bold border-l border-gray-200">70_Last</th>
-                                    <th class="p-3 font-bold border-l border-gray-200 text-emerald-600">80_TM</th>
-                                    <th class="p-3 font-bold border-l border-gray-200">80_Last</th>
-                                    <th class="p-3 font-bold border-l border-gray-200">204_TM</th>
-                                    <th class="p-3 font-bold border-l border-gray-200">205_First</th>
-                                    <th class="p-3 font-bold border-l border-gray-200">205_Last</th>
-                                    <th class="p-3 font-bold border-l border-gray-200 text-orange-600">Latest Opcode</th>
-                                </tr>
+                            <thead id="tableMasterHead">
+                                <!-- Head goes here (di-generate dari JavaScript) -->
                             </thead>
                             <tbody id="tableMasterBody" class="text-xs divide-y divide-gray-100">
                                 <!-- Content goes here -->
@@ -788,6 +778,8 @@
         let masterCurrentPage = 1;
         const masterRowsPerPage = 50;
         let masterSearchQuery = "";
+        let masterSortColumn = "";
+        let masterSortDirection = "asc";
 
         // UI Elements
         const btnTriggerUpload = document.getElementById('btnTriggerUpload');
@@ -942,6 +934,76 @@
 
         initializeDashboardApp();
 
+        // --- ALUR PROSES PERBAIKAN DATABASE (SAPU AJAIB) ---
+        window.cleanDatabaseAWB = async function() {
+            if (!auth.currentUser) {
+                window.showAlert('error', 'Akses Ditolak', 'Harap tunggu otorisasi sistem terhubung.');
+                return;
+            }
+
+            // Meminta konfirmasi agar tidak sengaja terpencet
+            if (!confirm("Fitur ini akan memindai seluruh database Anda dan membersihkan AWB yang memiliki karakter kutip/sampah di depannya. Lanjutkan?")) return;
+
+            window.showLoading("Memindai dan membersihkan database...");
+            
+            try {
+                // Tarik semua data langsung dari Cloud
+                const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
+                let operations = [];
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const oldDocId = docSnap.id; 
+                    let newDocId = oldDocId;
+
+                    // Logika pembersihan AWB 1100
+                    if (newDocId.includes('1100')) {
+                        newDocId = newDocId.replace(/^.*?1100/, '1100');
+                    }
+
+                    // Jika ternyata namanya berubah (berarti sebelumnya kotor/terkena kutip)
+                    if (oldDocId !== newDocId && newDocId !== '') {
+                        data.awb = newDocId; // Update isinya
+                        operations.push({ old: oldDocId, new: newDocId, data: data });
+                    }
+                });
+
+                if (operations.length === 0) {
+                    window.hideLoading();
+                    window.showAlert('success', 'Database Bersih', 'Tidak ditemukan AWB dengan format kotor di database Anda. Semuanya sudah rapi!');
+                    return;
+                }
+
+                // Jalankan proses migrasi & hapus (Batch/Massal)
+                const batchSize = 400;
+                for (let i = 0; i < operations.length; i += batchSize) {
+                    const chunk = operations.slice(i, i + batchSize);
+                    const batch = writeBatch(db);
+                    
+                    chunk.forEach(op => {
+                        const oldRef = doc(db, COLLECTION_NAME, op.old);
+                        const newRef = doc(db, COLLECTION_NAME, op.new);
+                        
+                        batch.set(newRef, op.data); // 1. Buat dokumen dengan nama yang bersih
+                        batch.delete(oldRef);       // 2. Hapus dokumen dengan nama yang kotor
+                    });
+                    
+                    await batch.commit();
+                }
+
+                window.hideLoading();
+                window.showAlert('success', 'Migrasi Berhasil', `Luar biasa! Sebanyak ${operations.length.toLocaleString()} AWB kotor telah berhasil dibersihkan dari database.`);
+                
+                // Muat ulang data agar dasbor menjadi bersih
+                loadDataFromDB(); 
+
+            } catch (error) {
+                console.error("Clean DB Error:", error);
+                window.hideLoading();
+                window.showAlert('error', 'Gagal Memperbaiki', 'Terjadi kesalahan saat memproses database. Pastikan koneksi internet stabil.');
+            }
+        };
+
         // --- ALUR PROSES UPLOAD ---
         btnTriggerUpload.addEventListener('click', () => {
             currentAuthAction = 'UPLOAD';
@@ -1025,6 +1087,7 @@
                 '205_last': '_205_tm_last', '205_tm_last': '_205_tm_last', '_205_tm_last': '_205_tm_last',
                 '55_tm': '_55_tm', '_55_tm': '_55_tm',
                 'latest_opcode_tm': 'latest_opcode_tm', 'latest_opcode': 'latest_opcode_tm',
+                'time_scan_internal': 'time_scan_internal', 'time_scan': 'time_scan_internal',
                 'fop_code_internal': 'fop_code_internal', 'fop': 'fop_code_internal',
                 'hub_operator_internal': 'hub_operator_internal',
                 'staging_operator_internal': 'staging_operator_internal'
@@ -1045,6 +1108,7 @@
             if (parts.includes('205') && parts.includes('last')) return '_205_tm_last';
             if (parts.includes('55') && parts.includes('tm')) return '_55_tm';
             if (parts.includes('latest') && parts.includes('opcode')) return 'latest_opcode_tm';
+            if (parts.includes('time') && parts.includes('scan')) return 'time_scan_internal';
             
             return null; 
         }
@@ -1220,12 +1284,17 @@
                         });
                         
                         if (obj.awb) {
-                            obj.awb = obj.awb.trim().replace(/[\/\\|]/g, '-').replace(/["'=]/g, '');
-                            if (obj.awb.includes('1100')) {
-                                obj.awb = obj.awb.replace(/^.*?1100/, '1100');
+                            // Sanitasi ketat AWB dari CSV Update: Hilangkan spasi, garis miring, pipe, kutip, dan potong awal 1100
+                            let cleanAwb = obj.awb.trim().replace(/[\/\\|]/g, '-').replace(/["'=]/g, '');
+                            if (cleanAwb.includes('1100')) {
+                                cleanAwb = cleanAwb.replace(/^.*?1100/, '1100');
                             }
-                            if (obj.awb.length <= 50) {
-                                updateMap.set(obj.awb, obj);
+                            
+                            // Gunakan AWB yang sudah steril sebagai kunci (key)
+                            obj.awb = cleanAwb;
+                            
+                            if (cleanAwb.length > 0 && cleanAwb.length <= 50) {
+                                updateMap.set(cleanAwb, obj);
                             }
                         }
                     });
@@ -1237,13 +1306,16 @@
                         const recordsToUpdate = [];
 
                         rawData.forEach(rec => {
-                            let dbAwb = (rec.awb || '').trim().replace(/[\/\\|]/g, '-').replace(/["'=]/g, '');
-                            if (dbAwb.includes('1100')) {
-                                dbAwb = dbAwb.replace(/^.*?1100/, '1100');
+                            // Sanitasi ketat AWB dari Database SEBELUM dicocokkan
+                            // Ini memastikan "1100... di DB bisa cocok dengan 1100... di CSV
+                            let dbAwbClean = (rec.awb || '').trim().replace(/[\/\\|]/g, '-').replace(/["'=]/g, '');
+                            if (dbAwbClean.includes('1100')) {
+                                dbAwbClean = dbAwbClean.replace(/^.*?1100/, '1100');
                             }
                             
-                            if (dbAwb && updateMap.has(dbAwb)) {
-                                const updateData = updateMap.get(dbAwb);
+                            // Pencocokan dilakukan menggunakan AWB yang sudah sama-sama steril
+                            if (dbAwbClean && updateMap.has(dbAwbClean)) {
+                                const updateData = updateMap.get(dbAwbClean);
                                 
                                 if (updateData['80_tm'] !== undefined && updateData['80_tm'] !== '') rec['80_tm'] = updateData['80_tm'];
                                 if (updateData['_47_tm'] !== undefined && updateData['_47_tm'] !== '') rec['_47_tm'] = updateData['_47_tm'];
@@ -1255,6 +1327,7 @@
                                 if (updateData['_205_tm_last'] !== undefined && updateData['_205_tm_last'] !== '') rec['_205_tm_last'] = updateData['_205_tm_last'];
                                 if (updateData['expect_delivery_tm'] !== undefined && updateData['expect_delivery_tm'] !== '') rec['expect_delivery_tm'] = updateData['expect_delivery_tm'];
                                 if (updateData['latest_opcode_tm'] !== undefined && updateData['latest_opcode_tm'] !== '') rec['latest_opcode_tm'] = updateData['latest_opcode_tm'];
+                                if (updateData['time_scan_internal'] !== undefined && updateData['time_scan_internal'] !== '') rec['time_scan_internal'] = updateData['time_scan_internal'];
                                 
                                 const valSla = updateData['delivery_sla'];
                                 if (valSla !== undefined && valSla !== '') {
@@ -1269,6 +1342,7 @@
                                 if (updateData['staging_operator_internal'] !== undefined) rec['staging_operator_internal'] = updateData['staging_operator_internal'];
                                 if (updateData['fop_code_internal'] !== undefined) rec['fop_code_internal'] = updateData['fop_code_internal'];
                                 
+                                // Penting: Jangan ubah rec.awb aslinya jika sudah terlanjur kotor di DB (agar referensi Doc ID tetap valid untuk update)
                                 recordsToUpdate.push(rec);
                                 updatedCount++;
                             }
@@ -1484,6 +1558,19 @@
 
         window.changeMasterPage = function(dir) {
             masterCurrentPage += dir;
+            renderMasterTable();
+        };
+
+        window.handleMasterSort = function(columnId) {
+            // Jika kolom yang sama diklik lagi, balikkan arahnya
+            if (masterSortColumn === columnId) {
+                masterSortDirection = masterSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                // Jika klik kolom baru, atur sebagai ascending (A-Z)
+                masterSortColumn = columnId;
+                masterSortDirection = 'asc';
+            }
+            masterCurrentPage = 1; // Kembali ke halaman pertama saat melakukan sorting
             renderMasterTable();
         };
 
@@ -2765,17 +2852,85 @@
                 });
             }
 
+            // --- Terapkan Pengurutan (Sorting) A-Z atau Z-A ---
+            if (masterSortColumn) {
+                dataToRender.sort((a, b) => {
+                    let valA = a[masterSortColumn] || '';
+                    let valB = b[masterSortColumn] || '';
+                    
+                    if (typeof valA === 'string') valA = valA.toLowerCase();
+                    if (typeof valB === 'string') valB = valB.toLowerCase();
+
+                    if (valA < valB) return masterSortDirection === 'asc' ? -1 : 1;
+                    if (valA > valB) return masterSortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
             badge.textContent = `${dataToRender.length.toLocaleString()} Baris`;
 
             if (container && container.classList.contains('hidden')) return;
 
+            const thead = document.getElementById('tableMasterHead');
             const tbody = document.getElementById('tableMasterBody');
             const btnPrev = document.getElementById('btnMasterPrev');
             const btnNext = document.getElementById('btnMasterNext');
             const pageInfo = document.getElementById('masterPageInfo');
             
+            // --- Generate Judul Kolom (Headers) dengan Ikon Sortir ---
+            const columns = [
+                { id: 'awb', label: 'AWB', sticky: true },
+                { id: 'destination_staging', label: 'Staging' },
+                { id: 'service_code', label: 'Service' },
+                { id: 'delivery_sla', label: 'SLA Status' },
+                { id: 'expect_delivery_tm', label: 'EDD', color: 'text-purple-600' },
+                { id: 'time_scan_internal', label: 'Time Scan', color: 'text-teal-600' },
+                { id: 'hub_operator_internal', label: 'Hub Opr' },
+                { id: 'staging_operator_internal', label: 'Staging Opr' },
+                { id: 'fop_code_internal', label: 'FOP Code' },
+                { id: '_47_tm', label: '47_TM', color: 'text-blue-600' },
+                { id: '_204_tm', label: '204_TM' },
+                { id: '_205_tm_first', label: '205_First' },
+                { id: '_205_tm_last', label: '205_Last' },
+                { id: '_70_tm_first', label: '70_First' },
+                { id: '_70_tm_last', label: '70_Last' },
+                { id: '80_tm', label: '80_TM', color: 'text-emerald-600' },
+                { id: '_80_tm_last', label: '80_Last' },
+                { id: 'latest_opcode_tm', label: 'Latest Opcode', color: 'text-orange-600' }
+            ];
+
+            let headHtml = `<tr class="bg-gray-100 text-gray-600 text-[10px] uppercase tracking-wider border-b border-gray-200 h-10">`;
+            columns.forEach(col => {
+                // Ikon bawaan (tersembunyi, muncul saat dihover)
+                let sortIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity ml-1 flex-shrink-0"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>`;
+                
+                // Ganti ikon dan warna jika kolom ini sedang aktif di-sortir
+                if (masterSortColumn === col.id) {
+                    if (masterSortDirection === 'asc') {
+                        sortIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 ml-1 flex-shrink-0"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>`;
+                    } else {
+                        sortIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 ml-1 flex-shrink-0"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>`;
+                    }
+                }
+
+                const baseClasses = "p-3 font-bold cursor-pointer hover:bg-gray-200 transition-colors group select-none";
+                const stickyClass = col.sticky ? "sticky left-0 bg-gray-100 z-10" : "border-l border-gray-200";
+                const colorClass = col.color ? col.color : "";
+
+                headHtml += `
+                    <th class="${baseClasses} ${stickyClass} ${colorClass}" onclick="handleMasterSort('${col.id}')" title="Urutkan berdasarkan ${col.label}">
+                        <div class="flex items-center justify-between gap-1">
+                            <span>${col.label}</span>
+                            ${sortIcon}
+                        </div>
+                    </th>
+                `;
+            });
+            headHtml += `</tr>`;
+            thead.innerHTML = headHtml;
+
             if (dataToRender.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="14" class="p-6 text-center text-gray-400">Tidak ada data yang ditemukan. Coba hapus kata kunci pencarian.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="18" class="p-6 text-center text-gray-400">Tidak ada data yang ditemukan. Coba hapus kata kunci pencarian.</td></tr>';
                 pageInfo.textContent = `Hal 1 dari 1`;
                 btnPrev.disabled = true;
                 btnNext.disabled = true;
@@ -2809,14 +2964,18 @@
                         <td class="p-3 border-l border-gray-100">${cellVal(row.service_code)}</td>
                         <td class="p-3 border-l border-gray-100"><span class="${slaColor}">${cellVal(row.delivery_sla)}</span></td>
                         <td class="p-3 border-l border-gray-100 text-purple-700 whitespace-nowrap">${cellDate(row.expect_delivery_tm)}</td>
+                        <td class="p-3 border-l border-gray-100 text-teal-700 whitespace-nowrap">${cellDate(row.time_scan_internal)}</td>
+                        <td class="p-3 border-l border-gray-100">${cellVal(row.hub_operator_internal)}</td>
+                        <td class="p-3 border-l border-gray-100">${cellVal(row.staging_operator_internal)}</td>
+                        <td class="p-3 border-l border-gray-100">${cellVal(row.fop_code_internal)}</td>
                         <td class="p-3 border-l border-gray-100 text-blue-700 whitespace-nowrap">${cellDate(row._47_tm)}</td>
+                        <td class="p-3 border-l border-gray-100 whitespace-nowrap">${cellDate(row._204_tm)}</td>
+                        <td class="p-3 border-l border-gray-100 whitespace-nowrap">${cellDate(row._205_tm_first)}</td>
+                        <td class="p-3 border-l border-gray-100 whitespace-nowrap">${cellDate(row._205_tm_last)}</td>
                         <td class="p-3 border-l border-gray-100 whitespace-nowrap">${cellDate(row._70_tm_first)}</td>
                         <td class="p-3 border-l border-gray-100 whitespace-nowrap">${cellDate(row._70_tm_last)}</td>
                         <td class="p-3 border-l border-gray-100 text-emerald-700 whitespace-nowrap">${cellDate(row['80_tm'])}</td>
                         <td class="p-3 border-l border-gray-100 whitespace-nowrap">${cellDate(row._80_tm_last)}</td>
-                        <td class="p-3 border-l border-gray-100 whitespace-nowrap">${cellDate(row._204_tm)}</td>
-                        <td class="p-3 border-l border-gray-100 whitespace-nowrap">${cellDate(row._205_tm_first)}</td>
-                        <td class="p-3 border-l border-gray-100 whitespace-nowrap">${cellDate(row._205_tm_last)}</td>
                         <td class="p-3 border-l border-gray-100 text-orange-600 whitespace-nowrap">${cellDate(row.latest_opcode_tm)}</td>
                     </tr>
                 `;
