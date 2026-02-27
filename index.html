@@ -223,11 +223,6 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
 
-                <!-- Tombol Baru: Perbaiki/Sapu Database -->
-                <button onclick="cleanDatabaseAWB()" class="shrink-0 w-9 h-9 text-purple-500 hover:text-purple-600 hover:bg-purple-50 border border-purple-100 bg-white rounded-lg transition-all shadow-sm hover:-translate-y-0.5 flex items-center justify-center" title="Bersihkan dan Perbaiki AWB Kotor (Tanda Kutip) di Database">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M15 9h0"/><path d="M17.8 6.2 19 5"/><path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/></svg>
-                </button>
-
             </div>
         </div>
     </div>
@@ -686,21 +681,6 @@
         </div>
     </div>
 
-    <!-- Modal Konfirmasi Sapu Ajaib -->
-    <div id="modalConfirmClean" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-200">
-            <div class="flex items-center gap-3 mb-4 text-purple-600">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M15 9h0"/><path d="M17.8 6.2 19 5"/><path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/></svg>
-                <h3 class="text-lg font-bold text-gray-900">Konfirmasi Pembersihan</h3>
-            </div>
-            <p class="text-sm text-gray-500 mb-6">Fitur ini akan memindai seluruh database Anda dan membersihkan AWB yang memiliki karakter kutip/sampah di depannya. Apakah Anda yakin ingin melanjutkan?</p>
-            <div class="flex justify-end gap-3">
-                <button onclick="closeModal('modalConfirmClean')" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Batal</button>
-                <button onclick="executeCleanDatabaseAWB()" class="px-4 py-2 text-sm font-semibold bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors shadow-sm">Ya, Bersihkan</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal Hapus Data (Diperbarui dengan 2 Opsi) -->
     <div id="modalDeleteData" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 transform scale-95 transition-transform duration-200">
@@ -889,7 +869,24 @@
                 
                 querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
+                    
+                    // --- AUTO-CLEAN AWB DI MEMORI ---
+                    // Membersihkan AWB yang terlanjur kotor di database agar selalu tampil bersih di Dasbor
+                    if (data.awb && typeof data.awb === 'string') {
+                        let cleanAwb = data.awb.trim().replace(/["'=]/g, '');
+                        if (cleanAwb.includes('1100')) cleanAwb = cleanAwb.replace(/^.*?1100/, '1100');
+                        data.awb = cleanAwb;
+                    }
+
                     if (data.records && Array.isArray(data.records)) {
+                        data.records = data.records.map(r => {
+                            if (r.awb && typeof r.awb === 'string') {
+                                let cAwb = r.awb.trim().replace(/["'=]/g, '');
+                                if (cAwb.includes('1100')) cAwb = cAwb.replace(/^.*?1100/, '1100');
+                                r.awb = cAwb;
+                            }
+                            return r;
+                        });
                         arrayDocs.push(data.records);
                     } else if (data.awb) {
                         individualDocs.push(data);
@@ -948,79 +945,6 @@
         }
 
         initializeDashboardApp();
-
-        // --- ALUR PROSES PERBAIKAN DATABASE (SAPU AJAIB) ---
-        window.cleanDatabaseAWB = async function() {
-            if (!auth.currentUser) {
-                window.showAlert('error', 'Akses Ditolak', 'Harap tunggu otorisasi sistem terhubung.');
-                return;
-            }
-
-            // Tampilkan custom modal alih-alih konfirmasi browser (window.confirm)
-            window.openModal('modalConfirmClean');
-        };
-
-        window.executeCleanDatabaseAWB = async function() {
-            window.closeModal('modalConfirmClean');
-            window.showLoading("Memindai dan membersihkan database...");
-            
-            try {
-                // Tarik semua data langsung dari Cloud
-                const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
-                let operations = [];
-
-                querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const oldDocId = docSnap.id; 
-                    let newDocId = oldDocId;
-
-                    // Logika pembersihan AWB 1100
-                    if (newDocId.includes('1100')) {
-                        newDocId = newDocId.replace(/^.*?1100/, '1100');
-                    }
-
-                    // Jika ternyata namanya berubah (berarti sebelumnya kotor/terkena kutip)
-                    if (oldDocId !== newDocId && newDocId !== '') {
-                        data.awb = newDocId; // Update isinya
-                        operations.push({ old: oldDocId, new: newDocId, data: data });
-                    }
-                });
-
-                if (operations.length === 0) {
-                    window.hideLoading();
-                    window.showAlert('success', 'Database Bersih', 'Tidak ditemukan AWB dengan format kotor di database Anda. Semuanya sudah rapi!');
-                    return;
-                }
-
-                // Jalankan proses migrasi & hapus (Batch/Massal)
-                const batchSize = 400;
-                for (let i = 0; i < operations.length; i += batchSize) {
-                    const chunk = operations.slice(i, i + batchSize);
-                    const batch = writeBatch(db);
-                    
-                    chunk.forEach(op => {
-                        const oldRef = doc(db, COLLECTION_NAME, op.old);
-                        const newRef = doc(db, COLLECTION_NAME, op.new);
-                        
-                        batch.set(newRef, op.data); // 1. Buat dokumen dengan nama yang bersih
-                        batch.delete(oldRef);       // 2. Hapus dokumen dengan nama yang kotor
-                    });
-                    
-                    await batch.commit();
-                }
-
-                window.hideLoading();
-                window.showAlert('success', 'Migrasi Berhasil', `Luar biasa! Sebanyak ${operations.length.toLocaleString()} AWB kotor telah berhasil dibersihkan dari database.`);
-                
-                // Muat ulang data agar dasbor menjadi bersih
-                loadDataFromDB(); 
-
-            } catch (error) {
-                console.error("Clean DB Error:", error);
-                window.hideLoading();
-                window.showAlert('error', 'Gagal Memperbaiki', 'Terjadi kesalahan saat memproses database. Pastikan koneksi internet stabil.');
-            }
-        };
 
         // --- ALUR PROSES UPLOAD ---
         btnTriggerUpload.addEventListener('click', () => {
@@ -1114,7 +1038,10 @@
             if (dict[h]) return dict[h];
 
             const parts = h.split('_');
-            if (parts.includes('awb')) return 'awb';
+            
+            // PERBAIKAN: Abaikan return_awb agar tidak menimpa AWB utama
+            if (parts.includes('awb') && !parts.includes('return')) return 'awb';
+            
             if (parts.includes('staging') && parts.includes('destination')) return 'destination_staging';
             if (parts.includes('47') && parts.includes('tm')) return '_47_tm';
             if (parts.includes('70') && parts.includes('first')) return '_70_tm_first';
@@ -1126,7 +1053,9 @@
             if (parts.includes('205') && parts.includes('last')) return '_205_tm_last';
             if (parts.includes('55') && parts.includes('tm')) return '_55_tm';
             if (parts.includes('latest') && parts.includes('opcode')) return 'latest_opcode_tm';
-            if (parts.includes('time') && parts.includes('scan')) return 'time_scan_internal';
+            
+            // PERBAIKAN: Abaikan time_scan_external agar tidak menimpa internal
+            if (parts.includes('time') && parts.includes('scan') && !parts.includes('external')) return 'time_scan_internal';
             
             return null; 
         }
@@ -1191,7 +1120,10 @@
                         
                         headers.forEach((mappedKey, index) => {
                             if (mappedKey && values[index] !== undefined) {
-                                obj[mappedKey] = values[index]; 
+                                // PERBAIKAN: Kunci data jika sudah ada (cegah overwrite oleh kolom asing)
+                                if (obj[mappedKey] === undefined || obj[mappedKey] === '') {
+                                    obj[mappedKey] = values[index]; 
+                                }
                             }
                         });
                         
@@ -1297,7 +1229,10 @@
                         const obj = {};
                         headers.forEach((mappedKey, index) => {
                             if (mappedKey && values[index] !== undefined) {
-                                obj[mappedKey] = values[index];
+                                // PERBAIKAN: Kunci data jika sudah terisi (mencegah return_awb menimpa awb_no)
+                                if (obj[mappedKey] === undefined || obj[mappedKey] === '') {
+                                    obj[mappedKey] = values[index];
+                                }
                             }
                         });
                         
