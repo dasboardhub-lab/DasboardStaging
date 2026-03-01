@@ -120,25 +120,34 @@
     <div class="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-[60] shadow-sm transition-all duration-300">
         <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3">
             
-            <!-- Branding & Status -->
-            <div class="flex items-center gap-3">
-                <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-2 rounded-lg text-white shadow-md shadow-blue-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            <!-- Top Row: Branding, Status & Mobile Toggle -->
+            <div class="flex items-center justify-between w-full">
+                <!-- Branding & Status -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-2 rounded-lg text-white shadow-md shadow-blue-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                    </div>
+                    <div class="flex items-end gap-2 md:gap-4 flex-wrap">
+                        <h1 class="text-lg md:text-xl font-extrabold text-gray-900 tracking-tight leading-none">Dashboard Operasional</h1>
+                        <p class="text-[10px] md:text-[11px] font-bold text-blue-600 flex items-center gap-1.5 mb-0.5" id="statusText">
+                            <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            Sistem Terhubung
+                        </p>
+                    </div>
                 </div>
-                <div class="flex items-end gap-4">
-                    <h1 class="text-xl font-extrabold text-gray-900 tracking-tight leading-none">Dashboard Operasional</h1>
-                    <p class="text-[11px] font-bold text-blue-600 flex items-center gap-1.5 mb-0.5" id="statusText">
-                        <span class="relative flex h-2 w-2">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        Sistem Terhubung
-                    </p>
-                </div>
+
+                <!-- Tombol Toggle Filter (Khusus Mobile) -->
+                <button onclick="toggleMobileFilters()" class="md:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm whitespace-nowrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                    Menu
+                </button>
             </div>
 
-            <!-- Toolbar: Filters + Actions on 1 Line -->
-            <div class="flex flex-wrap items-end gap-2.5 pb-2 w-full">
+            <!-- Toolbar: Filters + Actions on 1 Line (Bisa dilipat di HP) -->
+            <div id="filterContainer" class="hidden md:flex flex-wrap items-end gap-2.5 pb-2 w-full mt-2 md:mt-0 transition-all duration-300">
                 
                 <!-- Date Range Filters (Gabungan dalam 1 Pill) -->
                 <div class="min-w-[270px] flex-auto xl:flex-none">
@@ -219,7 +228,7 @@
                 </button>
                 <input type="file" accept=".csv" class="hidden" id="fileUpdatePending" />
 
-                <button id="btnHapusData" class="shrink-0 w-9 h-9 text-red-500 hover:text-red-600 hover:bg-red-50 border border-red-100 bg-white rounded-lg transition-all shadow-sm hover:-translate-y-0.5 flex items-center justify-center" title="Hapus Data Berdasarkan Tanggal Upload">
+                <button id="btnHapusData" class="shrink-0 w-9 h-9 text-red-500 hover:text-red-600 hover:bg-red-50 border border-red-100 bg-white rounded-lg transition-all shadow-sm hover:-translate-y-0.5 flex items-center justify-center" title="Hapus Data (Tanggal, Spesifik, atau Staging)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
 
@@ -655,7 +664,7 @@
     </div>
 
     <!-- Modal Password -->
-    <div id="modalPassword" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+    <div id="modalPassword" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-200">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-200">
             <h3 class="text-lg font-bold text-gray-900 mb-2">Otorisasi Diperlukan</h3>
             <p class="text-sm text-gray-500 mb-4">Masukkan kata sandi untuk mengunggah data.</p>
@@ -669,7 +678,7 @@
     </div>
 
     <!-- Modal Pilih Tanggal -->
-    <div id="modalDate" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+    <div id="modalDate" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-200">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-200">
             <h3 class="text-lg font-bold text-gray-900 mb-2">Pilih Tanggal Paket</h3>
             <p class="text-sm text-gray-500 mb-4">Tanggal ini akan disematkan pada seluruh data yang Anda unggah barusan.</p>
@@ -682,7 +691,7 @@
     </div>
 
     <!-- Modal Hapus Data (Diperbarui dengan 2 Opsi) -->
-    <div id="modalDeleteData" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+    <div id="modalDeleteData" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-200">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 transform scale-95 transition-transform duration-200">
             <div class="flex items-center gap-3 mb-4 text-red-600">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
@@ -711,14 +720,41 @@
                 </div>
             </div>
 
+            <!-- Opsi 3: Hapus Per Staging -->
+            <div class="mb-2 mt-5 p-4 border border-blue-100 bg-blue-50/30 rounded-lg">
+                <label class="block text-sm font-semibold text-gray-800 mb-1">3. Hapus Massal (Berdasarkan Staging)</label>
+                <p class="text-[11px] text-gray-500 mb-3">Menghapus seluruh paket yang masuk ke Staging tertentu (cocok untuk membuang data nyasar).</p>
+                <div class="flex gap-3">
+                    <select id="selectDeleteStaging" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <!-- Options populated by JS -->
+                    </select>
+                    <button id="btnConfirmDeleteStaging" class="px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors whitespace-nowrap shadow-sm">Hapus Staging</button>
+                </div>
+            </div>
+
             <div class="flex justify-end gap-3 mt-6 border-t border-gray-100 pt-4">
                 <button onclick="closeModal('modalDeleteData')" class="px-6 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Batal & Tutup</button>
             </div>
         </div>
     </div>
 
+    <!-- Modal Konfirmasi Hapus Staging (Kustom) -->
+    <div id="modalConfirmDeleteStaging" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 transform scale-95 transition-transform duration-200">
+            <div class="flex items-center gap-3 mb-4 text-red-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                <h3 class="text-lg font-bold text-gray-900">Peringatan Keras!</h3>
+            </div>
+            <p class="text-sm text-gray-600 mb-6">Anda akan menghapus <strong class="text-red-600" id="textStagingToDelete">SEMUA</strong> data paket (AWB) yang masuk ke Staging tersebut. Data yang dihapus tidak bisa dikembalikan. Lanjutkan?</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('modalConfirmDeleteStaging')" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Batal</button>
+                <button onclick="executeDeleteStaging()" class="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm">Ya, Hapus Permanen</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Alert Umum (Error / Success) -->
-    <div id="modalAlert" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+    <div id="modalAlert" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[100] hidden opacity-0 transition-opacity duration-200">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 transform scale-95 transition-transform duration-200 text-center">
             <div id="alertIcon" class="mx-auto mb-4 w-12 h-12 flex items-center justify-center rounded-full"></div>
             <h3 id="alertTitle" class="text-lg font-bold text-gray-900 mb-2">Informasi</h3>
@@ -759,6 +795,7 @@
         let hasDateRange = false;
         let pendingFile = null; 
         let currentAuthAction = null; 
+        let stagingToDelete = ""; // Variabel state untuk hapus staging
 
         let activeFilters = {
             destination_staging: [],
@@ -790,6 +827,18 @@
         const inputs = {
             startDate: document.getElementById('filterStartDate'),
             endDate: document.getElementById('filterEndDate')
+        };
+
+        // --- TOGGLE FILTER MOBILE ---
+        window.toggleMobileFilters = function() {
+            const container = document.getElementById('filterContainer');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                container.classList.add('flex');
+            } else {
+                container.classList.add('hidden');
+                container.classList.remove('flex');
+            }
         };
 
         // --- SISTEM MANAJEMEN MODAL ---
@@ -871,7 +920,6 @@
                     const data = docSnap.data();
                     
                     // --- AUTO-CLEAN AWB DI MEMORI ---
-                    // Membersihkan AWB yang terlanjur kotor di database agar selalu tampil bersih di Dasbor
                     if (data.awb && typeof data.awb === 'string') {
                         let cleanAwb = data.awb.trim().replace(/["'=]/g, '');
                         if (cleanAwb.includes('1100')) cleanAwb = cleanAwb.replace(/^.*?1100/, '1100');
@@ -1039,9 +1087,7 @@
 
             const parts = h.split('_');
             
-            // PERBAIKAN: Abaikan return_awb agar tidak menimpa AWB utama
             if (parts.includes('awb') && !parts.includes('return')) return 'awb';
-            
             if (parts.includes('staging') && parts.includes('destination')) return 'destination_staging';
             if (parts.includes('47') && parts.includes('tm')) return '_47_tm';
             if (parts.includes('70') && parts.includes('first')) return '_70_tm_first';
@@ -1053,8 +1099,6 @@
             if (parts.includes('205') && parts.includes('last')) return '_205_tm_last';
             if (parts.includes('55') && parts.includes('tm')) return '_55_tm';
             if (parts.includes('latest') && parts.includes('opcode')) return 'latest_opcode_tm';
-            
-            // PERBAIKAN: Abaikan time_scan_external agar tidak menimpa internal
             if (parts.includes('time') && parts.includes('scan') && !parts.includes('external')) return 'time_scan_internal';
             
             return null; 
@@ -1120,7 +1164,6 @@
                         
                         headers.forEach((mappedKey, index) => {
                             if (mappedKey && values[index] !== undefined) {
-                                // PERBAIKAN: Kunci data jika sudah ada (cegah overwrite oleh kolom asing)
                                 if (obj[mappedKey] === undefined || obj[mappedKey] === '') {
                                     obj[mappedKey] = values[index]; 
                                 }
@@ -1229,7 +1272,6 @@
                         const obj = {};
                         headers.forEach((mappedKey, index) => {
                             if (mappedKey && values[index] !== undefined) {
-                                // PERBAIKAN: Kunci data jika sudah terisi (mencegah return_awb menimpa awb_no)
                                 if (obj[mappedKey] === undefined || obj[mappedKey] === '') {
                                     obj[mappedKey] = values[index];
                                 }
@@ -1237,13 +1279,11 @@
                         });
                         
                         if (obj.awb) {
-                            // Sanitasi ketat AWB dari CSV Update: Hilangkan spasi, garis miring, pipe, kutip, dan potong awal 1100
                             let cleanAwb = obj.awb.trim().replace(/[\/\\|]/g, '-').replace(/["'=]/g, '');
                             if (cleanAwb.includes('1100')) {
                                 cleanAwb = cleanAwb.replace(/^.*?1100/, '1100');
                             }
                             
-                            // Gunakan AWB yang sudah steril sebagai kunci (key)
                             obj.awb = cleanAwb;
                             
                             if (cleanAwb.length > 0 && cleanAwb.length <= 50) {
@@ -1259,14 +1299,11 @@
                         const recordsToUpdate = [];
 
                         rawData.forEach(rec => {
-                            // Sanitasi ketat AWB dari Database SEBELUM dicocokkan
-                            // Ini memastikan "1100... di DB bisa cocok dengan 1100... di CSV
                             let dbAwbClean = (rec.awb || '').trim().replace(/[\/\\|]/g, '-').replace(/["'=]/g, '');
                             if (dbAwbClean.includes('1100')) {
                                 dbAwbClean = dbAwbClean.replace(/^.*?1100/, '1100');
                             }
                             
-                            // Pencocokan dilakukan menggunakan AWB yang sudah sama-sama steril
                             if (dbAwbClean && updateMap.has(dbAwbClean)) {
                                 const updateData = updateMap.get(dbAwbClean);
                                 
@@ -1295,7 +1332,6 @@
                                 if (updateData['staging_operator_internal'] !== undefined) rec['staging_operator_internal'] = updateData['staging_operator_internal'];
                                 if (updateData['fop_code_internal'] !== undefined) rec['fop_code_internal'] = updateData['fop_code_internal'];
                                 
-                                // Penting: Jangan ubah rec.awb aslinya jika sudah terlanjur kotor di DB (agar referensi Doc ID tetap valid untuk update)
                                 recordsToUpdate.push(rec);
                                 updatedCount++;
                             }
@@ -1363,6 +1399,24 @@
                 });
                 document.getElementById('btnConfirmDeleteDate').disabled = false;
                 document.getElementById('btnConfirmDeleteDate').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            // --- Populate Opsi Staging Baru ---
+            const selectStagingElem = document.getElementById('selectDeleteStaging');
+            selectStagingElem.innerHTML = '';
+            const uniqueStagings = [...new Set(rawData.map(r => r.destination_staging || 'Unknown'))].sort((a,b) => a.localeCompare(b));
+            
+            if (uniqueStagings.length === 0) {
+                selectStagingElem.innerHTML = '<option value="">Tidak ada data staging</option>';
+                document.getElementById('btnConfirmDeleteStaging').disabled = true;
+                document.getElementById('btnConfirmDeleteStaging').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                uniqueStagings.forEach(staging => {
+                    const count = rawData.filter(r => (r.destination_staging || 'Unknown') === staging).length;
+                    selectStagingElem.innerHTML += `<option value="${staging}">${staging === 'Unknown' ? 'Staging Kosong (Unknown)' : staging} (${count.toLocaleString()} AWB)</option>`;
+                });
+                document.getElementById('btnConfirmDeleteStaging').disabled = false;
+                document.getElementById('btnConfirmDeleteStaging').classList.remove('opacity-50', 'cursor-not-allowed');
             }
             
             window.openModal('modalDeleteData');
@@ -1459,6 +1513,65 @@
             }
         });
 
+        // Aksi: Tampilkan Konfirmasi Modal Hapus Staging
+        document.getElementById('btnConfirmDeleteStaging').addEventListener('click', () => {
+            const selectedStaging = document.getElementById('selectDeleteStaging').value;
+            if (!selectedStaging) return;
+
+            stagingToDelete = selectedStaging;
+            document.getElementById('textStagingToDelete').textContent = `Staging "${selectedStaging}"`;
+            
+            window.closeModal('modalDeleteData');
+            setTimeout(() => {
+                window.openModal('modalConfirmDeleteStaging');
+            }, 250); 
+        });
+
+        // Eksekusi: Hapus Massal Berdasarkan Staging
+        window.executeDeleteStaging = async function() {
+            window.closeModal('modalConfirmDeleteStaging');
+            if (!stagingToDelete) return;
+            
+            window.showLoading(`Menghapus data staging ${stagingToDelete}...`);
+            
+            try {
+                if (!auth.currentUser) throw new Error("Pengguna belum terautentikasi.");
+
+                const awbsToDelete = rawData.filter(r => (r.destination_staging || 'Unknown') === stagingToDelete).map(r => r.awb).filter(Boolean);
+                
+                if (awbsToDelete.length === 0) {
+                    window.hideLoading();
+                    window.showAlert('success', 'Info', 'Tidak ada data yang cocok untuk dihapus.');
+                    stagingToDelete = "";
+                    return;
+                }
+
+                const batchSize = 450;
+                for (let i = 0; i < awbsToDelete.length; i += batchSize) {
+                    const chunk = awbsToDelete.slice(i, i + batchSize);
+                    const batch = writeBatch(db);
+                    chunk.forEach(awb => {
+                        const docRef = doc(db, COLLECTION_NAME, awb);
+                        batch.delete(docRef);
+                    });
+                    await batch.commit();
+                }
+                
+                window.hideLoading();
+                window.showAlert('success', 'Data Staging Dihapus', `Sebanyak ${awbsToDelete.length.toLocaleString()} AWB untuk Staging "${stagingToDelete}" berhasil dibersihkan dari database secara permanen.`);
+                
+                rawData = [];
+                filteredData = [];
+                loadDataFromDB(); 
+                stagingToDelete = "";
+            } catch (error) {
+                console.error("Firebase Delete Staging Error:", error);
+                window.hideLoading();
+                window.showAlert('error', 'Gagal Hapus', 'Gagal menghapus data staging dari Firebase. Pastikan koneksi internet Anda stabil.');
+                stagingToDelete = "";
+            }
+        };
+
         // --- LOGIKA RESET & SETUP FILTER ---
         window.toggleDropdown = function(elementId) {
             const menu = document.getElementById(`menu-${elementId}`);
@@ -1515,15 +1628,13 @@
         };
 
         window.handleMasterSort = function(columnId) {
-            // Jika kolom yang sama diklik lagi, balikkan arahnya
             if (masterSortColumn === columnId) {
                 masterSortDirection = masterSortDirection === 'asc' ? 'desc' : 'asc';
             } else {
-                // Jika klik kolom baru, atur sebagai ascending (A-Z)
                 masterSortColumn = columnId;
                 masterSortDirection = 'asc';
             }
-            masterCurrentPage = 1; // Kembali ke halaman pertama saat melakukan sorting
+            masterCurrentPage = 1; 
             renderMasterTable();
         };
 
@@ -2233,7 +2344,7 @@
 
                 let status = 'Unknown';
                 
-                if (row.expect_delivery_tm && row.expect_delivery_tm.trim() !== '' && row.input_date) {
+                if (row.expect_delivery_tm && row.expect_delivery_tm.trim() !== '') {
                     const expDateStr = row.expect_delivery_tm.trim().split(' ')[0]; 
                     const inDateStr = row.input_date; 
                     
@@ -2400,7 +2511,7 @@
                                 const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
                                 
                                 if (diffDays < 0) cat = 'Over SLA';
-                                else if (diffDays === 0) cat = 'Last Day';
+                                else if (diffDays === 0) status = 'Last Day';
                                 else if (diffDays === 1 || diffDays === 2) cat = '1 - 2 Hari';
                                 else if (diffDays >= 3) cat = '>= 3 Hari';
                             }
